@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Diet — タブ整理 & メモリ節約",
+  "version": "1.0.0",
+  "description": "よく使うページにサイドパネルから即アクセス。放置タブの自動スリープ・重複整理・一括退避でChromeのメモリ消費を抑えます。",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "tabs",
+    "storage",
+    "sidePanel",
+    "alarms",
+    "favicon",
+    "system.memory"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Tab Diet を開く",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+T"
+      },
+      "description": "Tab Diet のサイドパネルを開閉する"
+    }
+  }
+}

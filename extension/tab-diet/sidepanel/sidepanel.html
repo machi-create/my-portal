@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab Diet</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <header class="panel-head">
+    <div class="brand">
+      <img src="../icons/icon32.png" alt="" width="22" height="22" />
+      <h1>Tab<span>Diet</span></h1>
+      <button id="btn-sleep-now" class="ghost-btn" title="表示中・ピン留め以外のタブをまとめてスリープ">💤 今すぐ</button>
+    </div>
+
+    <div class="meter glass">
+      <div class="meter-top">
+        <span class="mini-label">PC全体のメモリ</span>
+        <span id="meter-value" class="meter-value">--%</span>
+      </div>
+      <div class="meter-bar"><span id="meter-fill" class="meter-fill"></span></div>
+      <div class="meter-stats">
+        <span><strong id="stat-tabs">0</strong> タブ</span>
+        <span><strong id="stat-sleeping">0</strong> スリープ中</span>
+        <span><strong id="stat-saved">0</strong> MB 節約(目安)</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="segmented" role="tablist">
+    <button class="seg is-active" data-view="links" role="tab">リンク</button>
+    <button class="seg" data-view="tabs" role="tab">タブ</button>
+    <button class="seg" data-view="stash" role="tab">退避</button>
+    <button class="seg" data-view="settings" role="tab">設定</button>
+  </nav>
+
+  <main class="panel-body">
+    <!-- ========== よく使うページ ========== -->
+    <section class="view is-active" id="view-links">
+      <div class="toolbar">
+        <input type="search" id="link-search" class="field" placeholder="リンクを検索" />
+        <button id="btn-add-current" class="pill-btn primary" title="表示中のページを登録">＋ 今のページ</button>
+        <button id="btn-add-from-tabs" class="pill-btn" title="開いているタブから選んで登録">タブから</button>
+      </div>
+      <div id="link-list" class="list"></div>
+      <p class="empty" id="link-empty" hidden>
+        よく開く管理シートやツールを登録すると、<br />
+        ここからワンクリックで開けます。<br />
+        <small>すでに開いているタブがあれば、新しく開かずにそのタブへ切り替えます。</small>
+      </p>
+    </section>
+
+    <!-- ========== 開いているタブ ========== -->
+    <section class="view" id="view-tabs">
+      <div class="toolbar">
+        <input type="search" id="tab-search" class="field" placeholder="タブを検索" />
+        <button id="btn-dupes" class="pill-btn" title="同じページを開いているタブを整理">重複を整理</button>
+        <button id="btn-sleep-idle" class="pill-btn">放置をスリープ</button>
+      </div>
+      <div class="bulkbar" id="bulkbar" hidden>
+        <span id="bulk-count">0件選択</span>
+        <div class="bulk-actions">
+          <button id="btn-bulk-sleep" class="pill-btn">スリープ</button>
+          <button id="btn-bulk-stash" class="pill-btn primary">退避して閉じる</button>
+          <button id="btn-bulk-close" class="pill-btn danger">閉じる</button>
+        </div>
+      </div>
+      <div id="tab-list" class="list"></div>
+    </section>
+
+    <!-- ========== 退避(スタッシュ) ========== -->
+    <section class="view" id="view-stash">
+      <div class="toolbar">
+        <button id="btn-stash-window" class="pill-btn primary">このウィンドウを退避</button>
+        <button id="btn-stash-others" class="pill-btn">表示中以外を退避</button>
+      </div>
+      <div id="stash-list" class="list"></div>
+      <p class="empty" id="stash-empty" hidden>
+        退避すると、タブの中身を閉じてURLだけ保存します。<br />
+        <small>メモリはすぐ解放され、あとから1クリックで開き直せます。</small>
+      </p>
+    </section>
+
+    <!-- ========== 設定 ========== -->
+    <section class="view" id="view-settings">
+      <div class="setting-group glass">
+        <label class="switch-row">
+          <span>
+            <strong>放置タブを自動スリープ</strong>
+            <small>一定時間さわっていないタブのメモリを解放します。</small>
+          </span>
+          <input type="checkbox" id="set-autoSleep" class="switch" />
+        </label>
+
+        <label class="row">
+          <span>スリープまでの時間</span>
+          <select id="set-sleepAfterMin" class="field compact">
+            <option value="5">5分</option>
+            <option value="15">15分</option>
+            <option value="30">30分</option>
+            <option value="60">1時間</option>
+            <option value="120">2時間</option>
+            <option value="360">6時間</option>
+          </select>
+        </label>
+
+        <label class="switch-row">
+          <span>
+            <strong>ピン留めタブを保護</strong>
+            <small>常用タブはスリープさせません。</small>
+          </span>
+          <input type="checkbox" id="set-keepPinned" class="switch" />
+        </label>
+
+        <label class="switch-row">
+          <span>
+            <strong>音が鳴っているタブを保護</strong>
+            <small>音楽や会議中のタブを止めません。</small>
+          </span>
+          <input type="checkbox" id="set-keepAudible" class="switch" />
+        </label>
+
+        <label class="col">
+          <span>スリープさせないURL<small>1行に1つ。URLの一部でOK(例: docs.google.com)</small></span>
+          <textarea id="set-excludeList" class="field" rows="4"
+            placeholder="docs.google.com&#10;notion.so"></textarea>
+        </label>
+      </div>
+
+      <div class="setting-group glass">
+        <label class="switch-row">
+          <span>
+            <strong>アイコンにタブ数を表示</strong>
+            <small>開きすぎに気付けます。</small>
+          </span>
+          <input type="checkbox" id="set-showBadge" class="switch" />
+        </label>
+
+        <label class="row">
+          <span>警告する本数</span>
+          <input type="number" id="set-tabWarn" class="field compact" min="5" max="200" step="1" />
+        </label>
+
+        <label class="switch-row">
+          <span>
+            <strong>#以降の違いを無視</strong>
+            <small>同じシートの別タブ(#gid=…)を同一ページとして扱います。</small>
+          </span>
+          <input type="checkbox" id="set-ignoreHash" class="switch" />
+        </label>
+
+        <label class="switch-row">
+          <span>
+            <strong>閉じる前に確認</strong>
+            <small>まとめて閉じる操作の前に確認します。</small>
+          </span>
+          <input type="checkbox" id="set-confirmClose" class="switch" />
+        </label>
+      </div>
+
+      <div class="setting-group glass">
+        <p class="stat-line">
+          これまでに <strong id="stat-slept-total">0</strong> 本スリープ /
+          <strong id="stat-closed-total">0</strong> 本整理しました。
+        </p>
+        <div class="row-buttons">
+          <button id="btn-export" class="pill-btn">設定をエクスポート</button>
+          <button id="btn-import" class="pill-btn">インポート</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json" hidden />
+        <p class="note">
+          データはこのブラウザ内(chrome.storage.local)にのみ保存されます。外部送信は一切ありません。
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- タブから登録するときのピッカー -->
+  <div class="modal" id="picker" hidden>
+    <div class="modal-card glass">
+      <div class="modal-head">
+        <strong id="picker-title">登録するタブを選ぶ</strong>
+        <button id="picker-close" class="icon-btn" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body" id="picker-list"></div>
+      <div class="modal-foot">
+        <input type="text" id="picker-group" class="field" placeholder="グループ名(任意)" />
+        <button id="picker-ok" class="pill-btn primary">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+
+</html>
