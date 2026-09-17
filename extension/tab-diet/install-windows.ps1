@@ -11,7 +11,9 @@
 #>
 
 param(
-  [string]$Destination = 'C:\Users\user\OneDrive\Desktop\Claude\Business improvement'
+  # 既定はデスクトップの Claude\Business improvement
+  # (OneDrive でデスクトップを同期している場合も正しい場所を指します)
+  [string]$Destination = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Claude\Business improvement')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,7 +46,7 @@ Remove-Item $work -Recurse -Force
 
 # OneDrive がクラウドのみの状態にすると Chrome が読み込めないため、実体をPCに保持する
 # （エクスプローラの「このデバイス上で常に保持する」と同じ設定）
-cmd /c "attrib +P -U `"$target\*`" /S /D" 2>&1 | Out-Null
+attrib +P -U "$target\*" /S /D
 
 Write-Host ''
 Write-Host "配置しました: $target"
