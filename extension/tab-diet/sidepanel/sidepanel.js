@@ -156,6 +156,36 @@ function confirmDialog(message, okLabel = '実行する') {
   });
 }
 
+/** 選択肢を縦に並べるダイアログ。選ばれた value を返す(閉じたら null) */
+function chooseDialog(title, message, choices) {
+  return new Promise((resolve) => {
+    const close = (value) => {
+      overlay.remove();
+      resolve(value);
+    };
+    const overlay = el('div', {
+      class: 'modal',
+      onclick: (event) => { if (event.target === overlay) close(null); },
+    }, [
+      el('div', { class: 'modal-card glass' }, [
+        el('div', { class: 'modal-head' }, [
+          el('strong', { text: title }),
+          el('button', { class: 'icon-btn', title: '閉じる', onclick: () => close(null) }, [icon('close')]),
+        ]),
+        el('div', { class: 'modal-body' }, [
+          el('p', { text: message, style: 'margin:0;font-size:12.5px;line-height:1.8;white-space:pre-line' }),
+        ]),
+        el('div', { class: 'modal-foot stacked' }, choices.map((choice) => el('button', {
+          class: `pill-btn${choice.primary ? ' primary' : ''}`,
+          text: choice.label,
+          onclick: () => close(choice.value),
+        }))),
+      ]),
+    ]);
+    document.body.append(overlay);
+  });
+}
+
 /** 1行入力ダイアログ(window.prompt を使わず自前で出す) */
 function promptDialog(title, initial = '', placeholder = '') {
   return new Promise((resolve) => {
@@ -218,6 +248,59 @@ async function openOrFocus(url) {
   }
   await chrome.tabs.create({ url });
   return false;
+}
+
+/**
+ * 複数のリンクをまとめて開く。
+ * すでに開いているページは重複して開かず、開き先(現在のウィンドウ/新しいウィンドウ)を選べる。
+ * @param {{url: string, title?: string}[]} items
+ */
+async function openMany(items, label) {
+  if (items.length === 0) {
+    toast('開くリンクがありません');
+    return;
+  }
+  const tabs = await chrome.tabs.query({});
+  const isOpen = (item) => tabs.some((tab) => tab.url && sameTarget(tab.url, item.url, state.settings.ignoreHash));
+  const fresh = items.filter((item) => !isOpen(item));
+  const already = items.length - fresh.length;
+
+  if (fresh.length === 0) {
+    toast(`${label}はすべて開いています`);
+    return;
+  }
+
+  const lines = [`${label}の ${items.length}件 のうち ${fresh.length}件 を開きます。`];
+  if (already > 0) lines.push(`（${already}件 はすでに開いているので、そのタブをそのまま使います）`);
+  lines.push('', 'タブが増えるとメモリを使います。使い終わったら「退避」でまとめて閉じられます。');
+
+  const where = await chooseDialog('まとめて開く', lines.join('\n'), [
+    { label: `このウィンドウに ${fresh.length}件 開く`, value: 'current', primary: true },
+    { label: '新しいウィンドウで開く', value: 'window' },
+    { label: 'やめる', value: null },
+  ]);
+  if (!where) return;
+
+  if (where === 'window') {
+    await chrome.windows.create({ url: fresh.map((item) => item.url) });
+  } else {
+    for (const item of fresh) {
+      await chrome.tabs.create({ url: item.url, active: false });
+    }
+  }
+
+  // 利用回数を数えておく(リンク以外から呼ばれたときは何もしない)
+  let counted = false;
+  for (const item of fresh) {
+    const link = item.id ? state.links.find((entry) => entry.id === item.id) : null;
+    if (link) {
+      link.hits = (link.hits || 0) + 1;
+      counted = true;
+    }
+  }
+  if (counted) await saveLinks(state.links);
+
+  toast(`${fresh.length}件を開きました`);
 }
 
 /* ------------------------------------------------------------------ *
@@ -533,6 +616,10 @@ function renderLinks() {
   } else {
     for (const link of links) list.append(linkRow(link, openUrls));
   }
+
+  const openAll = $('#btn-open-all');
+  openAll.textContent = links.length > 0 ? `まとめて開く (${links.length})` : 'まとめて開く';
+  openAll.disabled = links.length === 0;
 
   if (links.length === 0 && state.links.length > 0) {
     list.append(el('p', {
@@ -984,14 +1071,7 @@ function renderStashes() {
         el('button', {
           class: 'pill-btn primary',
           text: 'まとめて開く',
-          onclick: async () => {
-            const ok = await confirmDialog(
-              `${stash.tabs.length}本を新しいウィンドウで開きます。\n本数が多いとメモリを使うので、必要なものだけ個別に開くのもおすすめです。`,
-              'まとめて開く',
-            );
-            if (!ok) return;
-            await chrome.windows.create({ url: stash.tabs.map((item) => item.url) });
-          },
+          onclick: () => openMany(stash.tabs, `「${stash.name}」`),
         }),
         el('button', {
           class: 'pill-btn',
@@ -1219,6 +1299,12 @@ function bindEvents() {
     if (await addLink({ title: tab.title, url: tab.url })) toast('登録しました');
   });
   $('#btn-add-from-tabs').addEventListener('click', openTabPicker);
+  $('#btn-open-all').addEventListener('click', () => {
+    const name = state.activeCategory === ALL
+      ? '表示中のリンク'
+      : `「${categoryById(state.activeCategory)?.name || ''}」`;
+    openMany(visibleLinks(), name);
+  });
   $('#picker-close').addEventListener('click', () => { $('#picker').hidden = true; });
 
   // タブ

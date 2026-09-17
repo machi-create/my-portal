@@ -407,6 +407,10 @@ body {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.field.full {
+  flex: 1 1 100%;
+}
+
 .field.compact {
   flex: 0 0 auto;
   width: 104px;
@@ -1076,6 +1080,15 @@ input[type='search']::-webkit-search-cancel-button {
   border-top: 1px solid var(--line);
 }
 
+.modal-foot.stacked {
+  flex-direction: column;
+}
+
+.modal-foot.stacked .pill-btn {
+  justify-content: center;
+  padding: 9px 12px;
+}
+
 /* ---------- トースト ---------- */
 
 .toast {
@@ -1097,6 +1110,11 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 .toast[hidden] {
+  display: none;
+}
+
+/* ダイアログを開いている間はトーストを隠す(ボタンと重なるため) */
+body:has(.modal:not([hidden])) .toast {
   display: none;
 }
 
