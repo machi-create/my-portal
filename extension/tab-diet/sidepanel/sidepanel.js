@@ -5,8 +5,9 @@
 import {
   getSettings,
   saveSettings,
-  getLinks,
   saveLinks,
+  saveCategories,
+  ensureCategories,
   getStashes,
   saveStashes,
   getStats,
@@ -24,13 +25,14 @@ import {
 } from '../common.js';
 
 const $ = (selector) => document.querySelector(selector);
-const DEFAULT_GROUP = 'よく使う';
 /** スリープ1本あたりのメモリ削減量の目安(MB)。実測値ではなく概算表示用 */
 const MB_PER_TAB = 100;
 
 const state = {
   settings: { ...DEFAULT_SETTINGS },
   links: [],
+  categories: [],
+  activeCategory: 'all',
   stashes: [],
   tabs: [],
   lastActive: {},
@@ -97,6 +99,38 @@ function confirmDialog(message, okLabel = '実行する') {
   });
 }
 
+/** 1行入力ダイアログ(window.prompt を使わず自前で出す) */
+function promptDialog(title, initial = '', placeholder = '') {
+  return new Promise((resolve) => {
+    const input = el('input', { class: 'field', type: 'text', value: initial, placeholder });
+    const close = (value) => {
+      overlay.remove();
+      resolve(value);
+    };
+    const decide = () => close(input.value.trim() || null);
+    const overlay = el('div', {
+      class: 'modal',
+      onclick: (event) => { if (event.target === overlay) close(null); },
+    }, [
+      el('div', { class: 'modal-card glass' }, [
+        el('div', { class: 'modal-head' }, [
+          el('strong', { text: title }),
+          el('button', { class: 'icon-btn', text: '✕', onclick: () => close(null) }),
+        ]),
+        el('div', { class: 'modal-body' }, [input]),
+        el('div', { class: 'modal-foot' }, [
+          el('button', { class: 'pill-btn', text: 'やめる', style: 'flex:1', onclick: () => close(null) }),
+          el('button', { class: 'pill-btn primary', text: '決定', style: 'flex:1', onclick: decide }),
+        ]),
+      ]),
+    ]);
+    input.addEventListener('keydown', (event) => { if (event.key === 'Enter') decide(); });
+    document.body.append(overlay);
+    input.focus();
+    input.select();
+  });
+}
+
 function formatAgo(ms) {
   const minutes = Math.floor(ms / 60_000);
   if (minutes < 1) return 'たった今';
@@ -153,23 +187,271 @@ async function updateMeter() {
 }
 
 /* ------------------------------------------------------------------ *
+ * ジャンル(カテゴリ)
+ * ------------------------------------------------------------------ */
+
+/** 「すべて」タブを表す擬似カテゴリID */
+const ALL = 'all';
+
+function categoryById(id) {
+  return state.categories.find((category) => category.id === id) || null;
+}
+
+function linkCountOf(categoryId) {
+  return state.links.filter((link) => link.categoryId === categoryId).length;
+}
+
+/** 新しいリンクの追加先(「すべて」表示中は先頭のジャンル) */
+function targetCategoryId() {
+  if (state.activeCategory !== ALL && categoryById(state.activeCategory)) {
+    return state.activeCategory;
+  }
+  return state.categories[0]?.id;
+}
+
+function renderCategoryBar() {
+  const bar = $('#cat-bar');
+  bar.replaceChildren();
+
+  const chip = (label, count, active, onclick, extra = {}) => el('button', {
+    class: `cat-chip${active ? ' is-active' : ''}${extra.class ? ` ${extra.class}` : ''}`,
+    title: extra.title,
+    onclick,
+  }, [
+    el('span', { text: label }),
+    count === null ? null : el('span', { class: 'count', text: String(count) }),
+  ]);
+
+  bar.append(chip('すべて', state.links.length, state.activeCategory === ALL, () => {
+    state.activeCategory = ALL;
+    renderCategoryBar();
+    renderLinks();
+  }));
+
+  for (const category of state.categories) {
+    const node = chip(
+      category.name,
+      linkCountOf(category.id),
+      state.activeCategory === category.id,
+      () => {
+        state.activeCategory = category.id;
+        renderCategoryBar();
+        renderLinks();
+      },
+      { title: `${category.name}（リンクをここへドラッグすると移動できます）` },
+    );
+    attachCategoryDrop(node, category);
+    bar.append(node);
+  }
+
+  bar.append(chip('＋', null, false, () => addCategory(), {
+    class: 'icon-chip', title: 'ジャンルを追加',
+  }));
+  bar.append(chip('⚙', null, false, openCategoryManager, {
+    class: 'icon-chip', title: 'ジャンルの名前変更・並べ替え・削除',
+  }));
+}
+
+/** ジャンルのタブにリンクをドロップして移動できるようにする */
+function attachCategoryDrop(node, category) {
+  node.addEventListener('dragover', (event) => {
+    if (!dragLinkId) return;
+    event.preventDefault();
+    node.classList.add('drop-target');
+  });
+  node.addEventListener('dragleave', () => node.classList.remove('drop-target'));
+  node.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    node.classList.remove('drop-target');
+    const link = state.links.find((item) => item.id === dragLinkId);
+    if (!link || link.categoryId === category.id) return;
+    link.categoryId = category.id;
+    await saveLinks(state.links);
+    renderCategoryBar();
+    renderLinks();
+    toast(`「${category.name}」へ移動しました`);
+  });
+}
+
+async function addCategory() {
+  const name = await promptDialog('ジャンルを追加', '', '例: 経理、案件A、日報');
+  if (!name) return;
+  const category = { id: uid(), name };
+  state.categories.push(category);
+  await saveCategories(state.categories);
+  state.activeCategory = category.id;
+  renderCategoryBar();
+  renderLinks();
+  toast(`「${name}」を追加しました`);
+}
+
+async function moveCategory(index, delta) {
+  const to = index + delta;
+  if (to < 0 || to >= state.categories.length) return;
+  const [moved] = state.categories.splice(index, 1);
+  state.categories.splice(to, 0, moved);
+  await saveCategories(state.categories);
+}
+
+async function removeCategory(category) {
+  if (state.categories.length <= 1) {
+    toast('ジャンルは1つ以上必要です');
+    return;
+  }
+  const count = linkCountOf(category.id);
+  const fallback = state.categories.find((item) => item.id !== category.id);
+  const ok = await confirmDialog(
+    count > 0
+      ? `「${category.name}」を削除します。\n登録済みの ${count}件 のリンクは「${fallback.name}」へ移動します。`
+      : `「${category.name}」を削除します。`,
+    '削除する',
+  );
+  if (!ok) return;
+
+  for (const link of state.links) {
+    if (link.categoryId === category.id) link.categoryId = fallback.id;
+  }
+  state.categories = state.categories.filter((item) => item.id !== category.id);
+  if (state.activeCategory === category.id) state.activeCategory = ALL;
+  await Promise.all([saveCategories(state.categories), saveLinks(state.links)]);
+  toast('削除しました');
+}
+
+/** ジャンルの名前変更・並べ替え・追加・削除をまとめて行うモーダル */
+function openCategoryManager() {
+  const body = el('div', { class: 'modal-body' });
+  const close = () => {
+    overlay.remove();
+    renderCategoryBar();
+    renderLinks();
+  };
+
+  const draw = () => {
+    body.replaceChildren();
+    state.categories.forEach((category, index) => {
+      const nameInput = el('input', { class: 'field', type: 'text', value: category.name });
+      nameInput.addEventListener('change', async () => {
+        const name = nameInput.value.trim();
+        if (!name) {
+          nameInput.value = category.name;
+          return;
+        }
+        category.name = name;
+        await saveCategories(state.categories);
+        toast('名前を変更しました');
+      });
+
+      body.append(el('div', { class: 'cat-manage-row' }, [
+        nameInput,
+        el('span', { class: 'count-note', text: `${linkCountOf(category.id)}件` }),
+        el('button', {
+          class: 'icon-btn', text: '↑', title: '上へ',
+          onclick: async () => { await moveCategory(index, -1); draw(); },
+        }),
+        el('button', {
+          class: 'icon-btn', text: '↓', title: '下へ',
+          onclick: async () => { await moveCategory(index, 1); draw(); },
+        }),
+        el('button', {
+          class: 'icon-btn danger', text: '✕', title: 'このジャンルを削除',
+          onclick: async () => { await removeCategory(category); draw(); },
+        }),
+      ]));
+    });
+
+    body.append(el('button', {
+      class: 'pill-btn primary',
+      text: '＋ ジャンルを追加',
+      style: 'margin-top:6px',
+      onclick: async () => { await addCategory(); draw(); },
+    }));
+    body.append(el('p', {
+      class: 'note',
+      style: 'margin-top:8px',
+      text: 'ジャンルはいくつでも作れます。リンクはタブへドラッグしても移動できます。',
+    }));
+  };
+  draw();
+
+  const overlay = el('div', {
+    class: 'modal',
+    onclick: (event) => { if (event.target === overlay) close(); },
+  }, [
+    el('div', { class: 'modal-card glass' }, [
+      el('div', { class: 'modal-head' }, [
+        el('strong', { text: 'ジャンルの管理' }),
+        el('button', { class: 'icon-btn', text: '✕', onclick: close }),
+      ]),
+      body,
+      el('div', { class: 'modal-foot' }, [
+        el('button', { class: 'pill-btn primary', text: '閉じる', style: 'flex:1', onclick: close }),
+      ]),
+    ]),
+  ]);
+  document.body.append(overlay);
+}
+
+/* ------------------------------------------------------------------ *
  * リンク(よく使うページ)
  * ------------------------------------------------------------------ */
 
-function groupedLinks() {
+/** いま表示すべきリンク(ジャンル絞り込み + 検索) */
+function visibleLinks() {
   const query = state.linkQuery.trim().toLowerCase();
-  const filtered = query
-    ? state.links.filter((link) =>
-        `${link.title} ${link.url} ${link.group || ''}`.toLowerCase().includes(query))
-    : state.links;
+  return state.links.filter((link) => {
+    if (state.activeCategory !== ALL && link.categoryId !== state.activeCategory) return false;
+    if (!query) return true;
+    const category = categoryById(link.categoryId);
+    return `${link.title} ${link.url} ${category?.name || ''}`.toLowerCase().includes(query);
+  });
+}
 
-  const groups = new Map();
-  for (const link of filtered) {
-    const name = link.group || DEFAULT_GROUP;
-    if (!groups.has(name)) groups.set(name, []);
-    groups.get(name).push(link);
-  }
-  return groups;
+function linkRow(link, openUrls) {
+  const isOpen = openUrls.some((url) => sameTarget(url, link.url, state.settings.ignoreHash));
+  const row = el('div', {
+    class: `row-item${isOpen ? ' is-active-tab' : ''}`,
+    draggable: 'true',
+    title: link.url,
+    dataset: { id: link.id },
+    onclick: async () => {
+      const focused = await openOrFocus(link.url);
+      link.hits = (link.hits || 0) + 1;
+      await saveLinks(state.links);
+      toast(focused ? '開いているタブに切り替えました' : '新しいタブで開きました');
+    },
+  }, [
+    iconFor(link.url),
+    el('div', { class: 'row-main' }, [
+      el('span', { class: 'row-title', text: link.title }),
+      el('span', { class: 'row-sub' }, [
+        el('span', { text: hostOf(link.url) || link.url }),
+        isOpen ? el('span', { class: 'badge open', text: '開いています' }) : null,
+      ]),
+    ]),
+    el('div', { class: 'row-actions' }, [
+      el('button', {
+        class: 'icon-btn',
+        title: '名前とジャンルを編集',
+        text: '✎',
+        onclick: (event) => { event.stopPropagation(); editLink(link); },
+      }),
+      el('button', {
+        class: 'icon-btn danger',
+        title: 'このリンクを削除',
+        text: '✕',
+        onclick: async (event) => {
+          event.stopPropagation();
+          state.links = state.links.filter((item) => item.id !== link.id);
+          await saveLinks(state.links);
+          renderCategoryBar();
+          renderLinks();
+          toast('削除しました');
+        },
+      }),
+    ]),
+  ]);
+  attachDragHandlers(row, link);
+  return row;
 }
 
 function renderLinks() {
@@ -178,59 +460,37 @@ function renderLinks() {
   $('#link-empty').hidden = state.links.length > 0;
 
   const openUrls = state.tabs.map((tab) => tab.url).filter(Boolean);
+  const links = visibleLinks();
 
-  for (const [groupName, links] of groupedLinks()) {
-    list.append(el('div', { class: 'group-head', text: groupName }));
-    for (const link of links) {
-      const isOpen = openUrls.some((url) => sameTarget(url, link.url, state.settings.ignoreHash));
-      const row = el('div', {
-        class: `row-item${isOpen ? ' is-active-tab' : ''}`,
-        draggable: 'true',
-        title: link.url,
-        dataset: { id: link.id },
-        onclick: async () => {
-          const focused = await openOrFocus(link.url);
-          link.hits = (link.hits || 0) + 1;
-          await saveLinks(state.links);
-          toast(focused ? '開いているタブに切り替えました' : '新しいタブで開きました');
-        },
-      }, [
-        iconFor(link.url),
-        el('div', { class: 'row-main' }, [
-          el('span', { class: 'row-title', text: link.title }),
-          el('span', { class: 'row-sub' }, [
-            el('span', { text: hostOf(link.url) || link.url }),
-            isOpen ? el('span', { class: 'badge open', text: '開いています' }) : null,
-          ]),
-        ]),
-        el('div', { class: 'row-actions' }, [
-          el('button', {
-            class: 'icon-btn',
-            title: '名前とグループを編集',
-            text: '✎',
-            onclick: (event) => { event.stopPropagation(); editLink(link); },
-          }),
-          el('button', {
-            class: 'icon-btn danger',
-            title: 'このリンクを削除',
-            text: '✕',
-            onclick: async (event) => {
-              event.stopPropagation();
-              state.links = state.links.filter((item) => item.id !== link.id);
-              await saveLinks(state.links);
-              renderLinks();
-              toast('削除しました');
-            },
-          }),
-        ]),
-      ]);
-      attachDragHandlers(row, link);
-      list.append(row);
+  if (state.activeCategory === ALL) {
+    // 「すべて」ではジャンルごとに見出しを付けて並べる
+    for (const category of state.categories) {
+      const rows = links.filter((link) => link.categoryId === category.id);
+      if (rows.length === 0) continue;
+      list.append(el('div', { class: 'group-head', text: category.name }));
+      for (const link of rows) list.append(linkRow(link, openUrls));
     }
+    const known = new Set(state.categories.map((category) => category.id));
+    const orphans = links.filter((link) => !known.has(link.categoryId));
+    if (orphans.length > 0) {
+      list.append(el('div', { class: 'group-head', text: '未分類' }));
+      for (const link of orphans) list.append(linkRow(link, openUrls));
+    }
+  } else {
+    for (const link of links) list.append(linkRow(link, openUrls));
+  }
+
+  if (links.length === 0 && state.links.length > 0) {
+    list.append(el('p', {
+      class: 'empty',
+      text: state.linkQuery.trim()
+        ? '一致するリンクがありません'
+        : 'このジャンルにはまだリンクがありません',
+    }));
   }
 }
 
-/** ドラッグ&ドロップでの並べ替え(グループをまたぐと所属も変わる) */
+/** ドラッグ&ドロップでの並べ替え(別ジャンルのリンクに重ねると所属も変わる) */
 let dragLinkId = null;
 
 function attachDragHandlers(row, link) {
@@ -269,20 +529,21 @@ function attachDragHandlers(row, link) {
     const from = state.links.findIndex((item) => item.id === dragLinkId);
     if (from < 0) return;
     const [moved] = state.links.splice(from, 1);
-    moved.group = link.group || DEFAULT_GROUP; // ドロップ先のグループに移す
+    moved.categoryId = link.categoryId; // ドロップ先のジャンルに移す
     const to = state.links.findIndex((item) => item.id === link.id);
     state.links.splice(after ? to + 1 : to, 0, moved);
     await saveLinks(state.links);
+    renderCategoryBar();
     renderLinks();
   });
 }
 
 function clearDropMarks() {
-  document.querySelectorAll('.drop-before, .drop-after')
-    .forEach((node) => node.classList.remove('drop-before', 'drop-after'));
+  document.querySelectorAll('.drop-before, .drop-after, .drop-target')
+    .forEach((node) => node.classList.remove('drop-before', 'drop-after', 'drop-target'));
 }
 
-async function addLink({ title, url, group }) {
+async function addLink({ title, url, categoryId }) {
   if (!url || isProtectedUrl(url)) {
     toast('このページは登録できません');
     return false;
@@ -295,18 +556,28 @@ async function addLink({ title, url, group }) {
     id: uid(),
     title: (title || hostOf(url) || url).slice(0, 120),
     url,
-    group: (group || '').trim() || DEFAULT_GROUP,
+    categoryId: categoryId || targetCategoryId(),
     hits: 0,
     createdAt: Date.now(),
   });
   await saveLinks(state.links);
+  renderCategoryBar();
   renderLinks();
   return true;
 }
 
+/** ジャンル選択用の <select> を作る */
+function categorySelect(selectedId) {
+  return el('select', { class: 'field' }, state.categories.map((category) => el('option', {
+    value: category.id,
+    selected: category.id === selectedId,
+    text: category.name,
+  })));
+}
+
 function editLink(link) {
   const titleInput = el('input', { class: 'field', type: 'text', value: link.title });
-  const groupInput = el('input', { class: 'field', type: 'text', value: link.group || DEFAULT_GROUP });
+  const select = categorySelect(link.categoryId);
   const close = () => overlay.remove();
 
   const overlay = el('div', {
@@ -320,7 +591,7 @@ function editLink(link) {
       ]),
       el('div', { class: 'modal-body' }, [
         el('label', { class: 'col' }, [el('span', { text: '表示名' }), titleInput]),
-        el('label', { class: 'col' }, [el('span', { text: 'グループ' }), groupInput]),
+        el('label', { class: 'col' }, [el('span', { text: 'ジャンル' }), select]),
         el('p', { class: 'note', text: link.url }),
       ]),
       el('div', { class: 'modal-foot' }, [
@@ -330,9 +601,10 @@ function editLink(link) {
           style: 'flex:1',
           onclick: async () => {
             link.title = titleInput.value.trim() || link.title;
-            link.group = groupInput.value.trim() || DEFAULT_GROUP;
+            link.categoryId = select.value;
             await saveLinks(state.links);
             close();
+            renderCategoryBar();
             renderLinks();
             toast('保存しました');
           },
@@ -372,14 +644,20 @@ function openTabPicker() {
     ]));
   }
 
-  $('#picker-group').value = '';
+  const select = $('#picker-category');
+  select.replaceChildren(...state.categories.map((category) => el('option', {
+    value: category.id,
+    text: category.name,
+  })));
+  select.value = targetCategoryId();
+
   $('#picker').hidden = false;
   $('#picker-ok').onclick = async () => {
-    const group = $('#picker-group').value;
+    const categoryId = select.value;
     let added = 0;
     for (const tab of candidates) {
       if (!picked.has(tab.id)) continue;
-      if (await addLink({ title: tab.title, url: tab.url, group })) added += 1;
+      if (await addLink({ title: tab.title, url: tab.url, categoryId })) added += 1;
     }
     $('#picker').hidden = true;
     toast(added > 0 ? `${added}件を登録しました` : '登録できるタブがありませんでした');
@@ -763,9 +1041,10 @@ async function renderStats() {
 async function exportData() {
   const payload = {
     app: 'tab-diet',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     settings: state.settings,
+    categories: state.categories,
     links: state.links,
     stashes: state.stashes,
   };
@@ -787,15 +1066,25 @@ async function importData(file) {
       return;
     }
     const ok = await confirmDialog(
-      `リンク ${data.links.length}件 / 退避 ${(data.stashes || []).length}件 を読み込みます。\n今の内容は置き換わります。`,
+      `ジャンル ${(data.categories || []).length}件 / リンク ${data.links.length}件 / `
+      + `退避 ${(data.stashes || []).length}件 を読み込みます。\n今の内容は置き換わります。`,
       '読み込む',
     );
     if (!ok) return;
-    state.links = data.links;
     state.stashes = Array.isArray(data.stashes) ? data.stashes : [];
     state.settings = await saveSettings({ ...DEFAULT_SETTINGS, ...(data.settings || {}) });
-    await Promise.all([saveLinks(state.links), saveStashes(state.stashes)]);
+    await Promise.all([
+      saveLinks(data.links),
+      saveStashes(state.stashes),
+      saveCategories(Array.isArray(data.categories) ? data.categories : []),
+    ]);
+    // 旧形式(グループ名の文字列)で書き出したファイルもここでジャンルに変換される
+    const store = await ensureCategories();
+    state.categories = store.categories;
+    state.links = store.links;
+    state.activeCategory = ALL;
     fillSettings();
+    renderCategoryBar();
     renderLinks();
     renderStashes();
     toast('読み込みました');
@@ -907,19 +1196,21 @@ function bindEvents() {
 }
 
 async function init() {
-  const [settings, links, stashes, currentWindow] = await Promise.all([
+  const [settings, stashes, currentWindow, store] = await Promise.all([
     getSettings(),
-    getLinks(),
     getStashes(),
     chrome.windows.getCurrent(),
+    ensureCategories(),
   ]);
   state.settings = settings;
-  state.links = links;
   state.stashes = stashes;
   state.currentWindowId = currentWindow.id;
+  state.categories = store.categories;
+  state.links = store.links;
 
   fillSettings();
   bindEvents();
+  renderCategoryBar();
   renderStashes();
   await Promise.all([refreshTabs(), renderStats()]);
 }

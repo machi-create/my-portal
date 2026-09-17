@@ -311,6 +311,93 @@ textarea.field {
   transform: none;
 }
 
+/* ---------- ジャンルタブ ---------- */
+
+.cat-bar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 9px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.cat-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.cat-bar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.cat-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.18s;
+}
+
+.cat-chip:hover {
+  color: var(--text);
+  background: var(--panel-strong);
+}
+
+.cat-chip.is-active {
+  color: var(--text);
+  border-color: rgba(138, 180, 255, 0.55);
+  background: linear-gradient(120deg, rgba(138, 180, 255, 0.22), rgba(179, 136, 255, 0.22));
+  box-shadow: 0 4px 16px rgba(138, 180, 255, 0.18);
+}
+
+/* リンクをドラッグして重ねたジャンル */
+.cat-chip.drop-target {
+  color: var(--text);
+  border-color: rgba(126, 240, 197, 0.7);
+  box-shadow: 0 0 0 2px rgba(126, 240, 197, 0.22);
+}
+
+.cat-chip .count {
+  padding: 0 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cat-chip.icon-chip {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+/* ジャンル管理モーダルの1行 */
+.cat-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cat-manage-row .field {
+  flex: 1 1 auto;
+}
+
+.cat-manage-row .count-note {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
 /* ---------- リスト ---------- */
 
 .list {

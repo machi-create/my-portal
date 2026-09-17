@@ -43,6 +43,7 @@
   <main class="panel-body">
     <!-- ========== よく使うページ ========== -->
     <section class="view is-active" id="view-links">
+      <div class="cat-bar" id="cat-bar"></div>
       <div class="toolbar">
         <input type="search" id="link-search" class="field" placeholder="リンクを検索" />
         <button id="btn-add-current" class="pill-btn primary" title="表示中のページを登録">＋ 今のページ</button>
@@ -52,7 +53,10 @@
       <p class="empty" id="link-empty" hidden>
         よく開く管理シートやツールを登録すると、<br />
         ここからワンクリックで開けます。<br />
-        <small>すでに開いているタブがあれば、新しく開かずにそのタブへ切り替えます。</small>
+        <small>
+          上のタブでジャンル分けできます（追加・名前変更・削除は ⚙ から）。<br />
+          すでに開いているタブがあれば、新しく開かずにそのタブへ切り替えます。
+        </small>
       </p>
     </section>
 
@@ -190,7 +194,7 @@
       </div>
       <div class="modal-body" id="picker-list"></div>
       <div class="modal-foot">
-        <input type="text" id="picker-group" class="field" placeholder="グループ名(任意)" />
+        <select id="picker-category" class="field"></select>
         <button id="picker-ok" class="pill-btn primary">登録する</button>
       </div>
     </div>

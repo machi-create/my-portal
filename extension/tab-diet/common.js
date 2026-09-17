@@ -25,9 +25,18 @@ const PROTECTED_SCHEMES = [
 export const STORE = {
   settings: 'settings',
   links: 'links',
+  categories: 'categories',
   stashes: 'stashes',
   stats: 'stats',
 };
+
+/** リンクの初期ジャンル。名前の変更・追加・削除はUIから自由に行える */
+export const DEFAULT_CATEGORIES = [
+  { id: 'cat-sheet', name: '管理シート' },
+  { id: 'cat-tool', name: '業務ツール' },
+  { id: 'cat-info', name: '情報収集' },
+  { id: 'cat-other', name: 'その他' },
+];
 
 /* ------------------------------------------------------------------ *
  * ストレージ
@@ -51,6 +60,62 @@ export async function getLinks() {
 
 export async function saveLinks(links) {
   await chrome.storage.local.set({ [STORE.links]: links });
+}
+
+export async function getCategories() {
+  const { categories } = await chrome.storage.local.get(STORE.categories);
+  return Array.isArray(categories) ? categories : [];
+}
+
+export async function saveCategories(categories) {
+  await chrome.storage.local.set({ [STORE.categories]: categories });
+}
+
+/**
+ * ジャンル(カテゴリ)を使える状態に整える。
+ * - 未設定なら既定の4ジャンルを作る
+ * - 旧形式(link.group の文字列)のリンクを categoryId 方式へ移行する
+ * - 参照先が消えたリンクは先頭のジャンルへ寄せる
+ */
+export async function ensureCategories() {
+  const categories = await getCategories();
+  const links = await getLinks();
+  let categoriesChanged = false;
+  let linksChanged = false;
+
+  if (categories.length === 0) {
+    categories.push(...DEFAULT_CATEGORIES.map((category) => ({ ...category })));
+    categoriesChanged = true;
+  }
+
+  const byName = new Map(categories.map((category) => [category.name, category]));
+  const ids = new Set(categories.map((category) => category.id));
+
+  for (const link of links) {
+    if (link.categoryId && ids.has(link.categoryId)) {
+      if ('group' in link) {
+        delete link.group;
+        linksChanged = true;
+      }
+      continue;
+    }
+    const name = String(link.group || '').trim();
+    let category = name ? byName.get(name) : null;
+    if (name && !category) {
+      category = { id: uid(), name };
+      categories.push(category);
+      byName.set(name, category);
+      ids.add(category.id);
+      categoriesChanged = true;
+    }
+    link.categoryId = (category || categories[0]).id;
+    delete link.group;
+    linksChanged = true;
+  }
+
+  if (categoriesChanged) await saveCategories(categories);
+  if (linksChanged) await saveLinks(links);
+  return { categories, links };
 }
 
 export async function getStashes() {
