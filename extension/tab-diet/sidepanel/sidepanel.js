@@ -47,6 +47,63 @@ const state = {
  * 小物
  * ------------------------------------------------------------------ */
 
+/** 線画アイコン(24pxグリッドのSVGパス) */
+const ICON_PATHS = {
+  moon: ['M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'],
+  sun: [
+    'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M12 1.5v2', 'M12 20.5v2', 'M4.2 4.2l1.4 1.4',
+    'M18.4 18.4l1.4 1.4', 'M1.5 12h2', 'M20.5 12h2', 'M4.2 19.8l1.4-1.4', 'M18.4 5.6l1.4-1.4',
+  ],
+  close: ['M18 6 6 18', 'M6 6l12 12'],
+  edit: ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z'],
+  plus: ['M12 5v14', 'M5 12h14'],
+  chevronDown: ['M6 9l6 6 6-6'],
+  chevronUp: ['M18 15l-6-6-6 6'],
+  arrowUp: ['M12 19V5', 'M5 12l7-7 7 7'],
+  arrowDown: ['M12 5v14', 'M19 12l-7 7-7-7'],
+  sliders: ['M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3', 'M1 14h6', 'M9 8h6', 'M17 16h6'],
+  volume: ['M11 5 6 9H2v6h4l5 4z', 'M19.1 4.9a10 10 0 0 1 0 14.2', 'M15.5 8.5a5 5 0 0 1 0 7'],
+  bookmark: ['M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z'],
+};
+
+/** アイコンを <svg> として作る(色は currentColor でテーマに追従) */
+function icon(name, size = 14) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'i');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of ICON_PATHS[name] || []) {
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', d);
+    svg.append(path);
+  }
+  return svg;
+}
+
+/** 設定値(auto/light/dark)から実際に使うテーマを決める */
+function resolveTheme(theme) {
+  if (theme === 'light' || theme === 'dark') return theme;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme() {
+  const resolved = resolveTheme(state.settings.theme);
+  document.documentElement.dataset.theme = resolved;
+  const button = $('#btn-theme');
+  if (!button) return;
+  // ボタンには「切り替え先」のアイコンを出す
+  button.replaceChildren(icon(resolved === 'light' ? 'moon' : 'sun', 15));
+  button.title = resolved === 'light' ? 'ダークに切り替える' : 'ライトに切り替える';
+}
+
 /** textContent 経由でのみ文字を入れる安全なDOM生成ヘルパー */
 function el(tag, props = {}, children = []) {
   const node = document.createElement(tag);
@@ -115,7 +172,7 @@ function promptDialog(title, initial = '', placeholder = '') {
       el('div', { class: 'modal-card glass' }, [
         el('div', { class: 'modal-head' }, [
           el('strong', { text: title }),
-          el('button', { class: 'icon-btn', text: '✕', onclick: () => close(null) }),
+          el('button', { class: 'icon-btn', title: '閉じる', onclick: () => close(null) }, [icon('close')]),
         ]),
         el('div', { class: 'modal-body' }, [input]),
         el('div', { class: 'modal-foot' }, [
@@ -218,7 +275,7 @@ function renderCategoryBar() {
     title: extra.title,
     onclick,
   }, [
-    el('span', { text: label }),
+    typeof label === 'string' ? el('span', { text: label }) : label,
     count === null ? null : el('span', { class: 'count', text: String(count) }),
   ]);
 
@@ -244,10 +301,10 @@ function renderCategoryBar() {
     bar.append(node);
   }
 
-  bar.append(chip('＋', null, false, () => addCategory(), {
+  bar.append(chip(icon('plus', 13), null, false, () => addCategory(), {
     class: 'icon-chip', title: 'ジャンルを追加',
   }));
-  bar.append(chip('⚙', null, false, openCategoryManager, {
+  bar.append(chip(icon('sliders', 13), null, false, openCategoryManager, {
     class: 'icon-chip', title: 'ジャンルの名前変更・並べ替え・削除',
   }));
 }
@@ -345,26 +402,25 @@ function openCategoryManager() {
         nameInput,
         el('span', { class: 'count-note', text: `${linkCountOf(category.id)}件` }),
         el('button', {
-          class: 'icon-btn', text: '↑', title: '上へ',
+          class: 'icon-btn', title: '上へ',
           onclick: async () => { await moveCategory(index, -1); draw(); },
-        }),
+        }, [icon('arrowUp', 13)]),
         el('button', {
-          class: 'icon-btn', text: '↓', title: '下へ',
+          class: 'icon-btn', title: '下へ',
           onclick: async () => { await moveCategory(index, 1); draw(); },
-        }),
+        }, [icon('arrowDown', 13)]),
         el('button', {
-          class: 'icon-btn danger', text: '✕', title: 'このジャンルを削除',
+          class: 'icon-btn danger', title: 'このジャンルを削除',
           onclick: async () => { await removeCategory(category); draw(); },
-        }),
+        }, [icon('close', 13)]),
       ]));
     });
 
     body.append(el('button', {
       class: 'pill-btn primary',
-      text: '＋ ジャンルを追加',
-      style: 'margin-top:6px',
+      style: 'margin-top:6px;justify-content:center',
       onclick: async () => { await addCategory(); draw(); },
-    }));
+    }, [icon('plus', 13), el('span', { text: 'ジャンルを追加' })]));
     body.append(el('p', {
       class: 'note',
       style: 'margin-top:8px',
@@ -380,7 +436,7 @@ function openCategoryManager() {
     el('div', { class: 'modal-card glass' }, [
       el('div', { class: 'modal-head' }, [
         el('strong', { text: 'ジャンルの管理' }),
-        el('button', { class: 'icon-btn', text: '✕', onclick: close }),
+        el('button', { class: 'icon-btn', title: '閉じる', onclick: close }, [icon('close')]),
       ]),
       body,
       el('div', { class: 'modal-foot' }, [
@@ -432,13 +488,11 @@ function linkRow(link, openUrls) {
       el('button', {
         class: 'icon-btn',
         title: '名前とジャンルを編集',
-        text: '✎',
         onclick: (event) => { event.stopPropagation(); editLink(link); },
-      }),
+      }, [icon('edit')]),
       el('button', {
         class: 'icon-btn danger',
         title: 'このリンクを削除',
-        text: '✕',
         onclick: async (event) => {
           event.stopPropagation();
           state.links = state.links.filter((item) => item.id !== link.id);
@@ -447,7 +501,7 @@ function linkRow(link, openUrls) {
           renderLinks();
           toast('削除しました');
         },
-      }),
+      }, [icon('close')]),
     ]),
   ]);
   attachDragHandlers(row, link);
@@ -587,7 +641,7 @@ function editLink(link) {
     el('div', { class: 'modal-card glass' }, [
       el('div', { class: 'modal-head' }, [
         el('strong', { text: 'リンクを編集' }),
-        el('button', { class: 'icon-btn', text: '✕', onclick: close }),
+        el('button', { class: 'icon-btn', title: '閉じる', onclick: close }, [icon('close')]),
       ]),
       el('div', { class: 'modal-body' }, [
         el('label', { class: 'col' }, [el('span', { text: '表示名' }), titleInput]),
@@ -719,10 +773,19 @@ function renderTabs() {
       });
 
       const badges = [];
-      if (tab.pinned) badges.push(el('span', { class: 'badge', text: '📌' }));
-      if (tab.audible) badges.push(el('span', { class: 'badge', text: '🔊' }));
-      if (tab.discarded) badges.push(el('span', { class: 'badge sleep', text: '💤 スリープ中' }));
-      else if (!tab.active) badges.push(el('span', { class: 'badge', text: formatAgo(idleMs) }));
+      if (tab.pinned) {
+        badges.push(el('span', { class: 'badge', title: 'ピン留め' }, [icon('bookmark', 10)]));
+      }
+      if (tab.audible) {
+        badges.push(el('span', { class: 'badge', title: '音声を再生中' }, [icon('volume', 10)]));
+      }
+      if (tab.discarded) {
+        badges.push(el('span', { class: 'badge sleep' }, [
+          icon('moon', 10), el('span', { text: 'スリープ中' }),
+        ]));
+      } else if (!tab.active) {
+        badges.push(el('span', { class: 'badge', text: formatAgo(idleMs) }));
+      }
 
       list.append(el('div', {
         class: `row-item${tab.discarded ? ' is-sleeping' : ''}${tab.active ? ' is-active-tab' : ''}`,
@@ -742,7 +805,6 @@ function renderTabs() {
           sleepable ? el('button', {
             class: 'icon-btn',
             title: 'このタブをスリープ',
-            text: '💤',
             onclick: async (event) => {
               event.stopPropagation();
               try {
@@ -754,11 +816,10 @@ function renderTabs() {
               }
               refreshTabs();
             },
-          }) : null,
+          }, [icon('moon')]) : null,
           el('button', {
             class: 'icon-btn danger',
             title: 'このタブを閉じる',
-            text: '✕',
             onclick: async (event) => {
               event.stopPropagation();
               await chrome.tabs.remove(tab.id);
@@ -766,7 +827,7 @@ function renderTabs() {
               state.selected.delete(tab.id);
               refreshTabs();
             },
-          }),
+          }, [icon('close')]),
         ]),
       ]));
     }
@@ -905,13 +966,12 @@ function renderStashes() {
 
     const toggle = el('button', {
       class: 'icon-btn',
-      text: '▾',
       title: '中身を見る',
       onclick: () => {
         links.hidden = !links.hidden;
-        toggle.textContent = links.hidden ? '▾' : '▴';
+        toggle.replaceChildren(icon(links.hidden ? 'chevronDown' : 'chevronUp'));
       },
-    });
+    }, [icon('chevronDown')]);
 
     list.append(el('div', { class: 'stash-card' }, [
       el('div', { class: 'stash-head' }, [
@@ -946,7 +1006,7 @@ function renderStashes() {
               el('div', { class: 'modal-card glass' }, [
                 el('div', { class: 'modal-head' }, [
                   el('strong', { text: '名前を変更' }),
-                  el('button', { class: 'icon-btn', text: '✕', onclick: close }),
+                  el('button', { class: 'icon-btn', title: '閉じる', onclick: close }, [icon('close')]),
                 ]),
                 el('div', { class: 'modal-body' }, [input]),
                 el('div', { class: 'modal-foot' }, [
@@ -989,6 +1049,7 @@ function renderStashes() {
  * ------------------------------------------------------------------ */
 
 const SETTING_FIELDS = [
+  ['theme', 'select'],
   ['autoSleep', 'checkbox'],
   ['sleepAfterMin', 'number'],
   ['keepPinned', 'checkbox'],
@@ -1019,6 +1080,7 @@ function bindSettings() {
     input.addEventListener(event, async () => {
       let value;
       if (kind === 'checkbox') value = input.checked;
+      else if (kind === 'select') value = input.value;
       else if (kind === 'lines') {
         value = input.value.split('\n').map((line) => line.trim()).filter(Boolean);
       } else {
@@ -1027,6 +1089,7 @@ function bindSettings() {
       }
       state.settings = await saveSettings({ [key]: value });
       chrome.runtime.sendMessage({ type: 'refresh-badge' }).catch(() => {});
+      if (key === 'theme') applyTheme();
       if (key === 'ignoreHash') refreshTabs();
     });
   }
@@ -1129,6 +1192,16 @@ function bindEvents() {
   });
 
   // ヘッダー
+  $('#btn-theme').addEventListener('click', async () => {
+    const next = resolveTheme(state.settings.theme) === 'light' ? 'dark' : 'light';
+    state.settings = await saveSettings({ theme: next });
+    $('#set-theme').value = next;
+    applyTheme();
+  });
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (state.settings.theme === 'auto') applyTheme();
+  });
+
   $('#btn-sleep-now').addEventListener('click', async () => {
     const response = await chrome.runtime.sendMessage({ type: 'sleep-now', force: true });
     toast(response?.count ? `${response.count}本をスリープしました` : 'スリープできるタブがありませんでした');
@@ -1207,6 +1280,9 @@ async function init() {
   state.currentWindowId = currentWindow.id;
   state.categories = store.categories;
   state.links = store.links;
+
+  applyTheme();
+  $('#btn-add-current').replaceChildren(icon('plus', 13), el('span', { text: '今のページ' }));
 
   fillSettings();
   bindEvents();

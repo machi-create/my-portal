@@ -5,6 +5,7 @@
 
 /** 既定の設定値 */
 export const DEFAULT_SETTINGS = {
+  theme: 'auto',          // 表示テーマ: auto(OSに追従) / light / dark
   autoSleep: true,        // 放置タブの自動スリープ
   sleepAfterMin: 30,      // 何分放置でスリープさせるか
   keepPinned: true,       // ピン留めタブは対象外

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 
 <head>
   <meta charset="UTF-8" />
@@ -14,21 +14,33 @@
 
   <header class="panel-head">
     <div class="brand">
-      <img src="../icons/icon32.png" alt="" width="22" height="22" />
+      <img src="../icons/icon32.png" alt="" width="20" height="20" class="brand-mark" />
       <h1>Tab<span>Diet</span></h1>
-      <button id="btn-sleep-now" class="ghost-btn" title="表示中・ピン留め以外のタブをまとめてスリープ">💤 今すぐ</button>
+      <button id="btn-theme" class="icon-btn head-btn" title="表示テーマを切り替える"
+        aria-label="表示テーマを切り替える"></button>
+      <button id="btn-sleep-now" class="ghost-btn"
+        title="表示中・ピン留め以外のタブをまとめてスリープ">今すぐスリープ</button>
     </div>
 
-    <div class="meter glass">
+    <div class="meter">
       <div class="meter-top">
         <span class="mini-label">PC全体のメモリ</span>
         <span id="meter-value" class="meter-value">--%</span>
       </div>
       <div class="meter-bar"><span id="meter-fill" class="meter-fill"></span></div>
       <div class="meter-stats">
-        <span><strong id="stat-tabs">0</strong> タブ</span>
-        <span><strong id="stat-sleeping">0</strong> スリープ中</span>
-        <span><strong id="stat-saved">0</strong> MB 節約(目安)</span>
+        <div class="stat">
+          <strong id="stat-tabs">0</strong>
+          <span>タブ</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-sleeping">0</strong>
+          <span>スリープ中</span>
+        </div>
+        <div class="stat" title="スリープ1本あたり100MBとして計算した概算です">
+          <strong id="stat-saved">0</strong>
+          <span>MB節約</span>
+        </div>
       </div>
     </div>
   </header>
@@ -46,7 +58,7 @@
       <div class="cat-bar" id="cat-bar"></div>
       <div class="toolbar">
         <input type="search" id="link-search" class="field" placeholder="リンクを検索" />
-        <button id="btn-add-current" class="pill-btn primary" title="表示中のページを登録">＋ 今のページ</button>
+        <button id="btn-add-current" class="pill-btn primary" title="表示中のページを登録">今のページ</button>
         <button id="btn-add-from-tabs" class="pill-btn" title="開いているタブから選んで登録">タブから</button>
       </div>
       <div id="link-list" class="list"></div>
@@ -93,6 +105,17 @@
 
     <!-- ========== 設定 ========== -->
     <section class="view" id="view-settings">
+      <div class="setting-group glass">
+        <label class="row">
+          <span>表示テーマ</span>
+          <select id="set-theme" class="field compact">
+            <option value="auto">自動</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </label>
+      </div>
+
       <div class="setting-group glass">
         <label class="switch-row">
           <span>
