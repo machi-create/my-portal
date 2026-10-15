@@ -1,0 +1,365 @@
+:root {
+  --accent: #0f9f6e;
+  --accent-strong: #0b7a55;
+  --accent-soft: #e2f6ee;
+  --st-agreed: #16a34a;
+  --st-pending: #d97706;
+  --st-question: #2563eb;
+  --st-rejected: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #34d399;
+    --accent-strong: #6ee7b7;
+    --accent-soft: #143528;
+    --st-agreed: #4ade80;
+    --st-pending: #fbbf24;
+    --st-question: #7aa7ff;
+    --st-rejected: #9ca3af;
+  }
+}
+
+.actions.first {
+  margin-top: 0;
+}
+
+.show-toggle {
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------- フォーム */
+.pin-form {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.form-target {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.form-target-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.status-seg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.status-seg button {
+  padding: 5px 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.status-seg button[aria-checked="true"] {
+  border-color: transparent;
+  color: #fff;
+}
+
+.status-seg button[data-st="agreed"][aria-checked="true"] {
+  background: var(--st-agreed);
+}
+.status-seg button[data-st="pending"][aria-checked="true"] {
+  background: var(--st-pending);
+}
+.status-seg button[data-st="question"][aria-checked="true"] {
+  background: var(--st-question);
+}
+.status-seg button[data-st="rejected"][aria-checked="true"] {
+  background: var(--st-rejected);
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-seg button[aria-checked="true"] {
+    color: #0f1117;
+  }
+}
+
+.form-error {
+  margin: 0 0 6px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- ピンの一覧 */
+.pin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pin-card {
+  position: relative;
+  padding: 12px 12px 10px 46px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pin-card:hover {
+  border-color: var(--border-strong);
+}
+
+.pin-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.pin-no {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.st-agreed {
+  background: var(--st-agreed);
+}
+.st-pending {
+  background: var(--st-pending);
+}
+.st-question {
+  background: var(--st-question);
+}
+.st-rejected {
+  background: var(--st-rejected);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pin-no {
+    color: #0f1117;
+  }
+}
+
+.pin-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pin-status {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 17px;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .pin-status {
+    color: #0f1117;
+  }
+}
+
+.pin-target {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.pin-what {
+  margin-top: 4px;
+  font-weight: 700;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pin-meta {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.pin-note {
+  margin-top: 4px;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.pin-warn {
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 11.5px;
+}
+
+.history {
+  margin-top: 6px;
+}
+
+.history summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.history ol {
+  margin: 6px 0 0;
+  padding: 0 0 0 4px;
+  list-style: none;
+  border-left: 2px solid var(--border);
+}
+
+.history li {
+  position: relative;
+  padding: 2px 0 6px 12px;
+  font-size: 11.5px;
+}
+
+.history li::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.history li.st-dot-agreed::before {
+  background: var(--st-agreed);
+}
+.history li.st-dot-pending::before {
+  background: var(--st-pending);
+}
+.history li.st-dot-question::before {
+  background: var(--st-question);
+}
+.history li.st-dot-rejected::before {
+  background: var(--st-rejected);
+}
+
+.history .h-meta {
+  color: var(--muted);
+}
+
+.pin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.pin-actions .danger {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------- すべての合意 */
+.filters {
+  margin-top: 8px;
+}
+
+.group {
+  margin-bottom: 12px;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 2px 6px;
+  min-width: 0;
+}
+
+.group-path {
+  font: 700 12px/1.5 var(--mono);
+}
+
+.group-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.row-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.row-item:hover {
+  border-color: var(--border-strong);
+}
+
+.row-item .pin-no {
+  position: static;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+.row-item .pin-what {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.row-item .pin-meta {
+  grid-column: 2;
+}
+
+.file-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}

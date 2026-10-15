@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>合意ピン</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>合意ピン</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+      <nav class="tabs" role="tablist" aria-label="表示">
+        <button class="tab" role="tab" id="tab-page" aria-controls="panel-page" aria-selected="true">このページ<span class="tab-count" id="pageCount" hidden></span></button>
+        <button class="tab" role="tab" id="tab-all" aria-controls="panel-all" aria-selected="false">すべての合意</button>
+        <button class="tab" role="tab" id="tab-set" aria-controls="panel-set" aria-selected="false">設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        Chromeの設定画面・新しいタブ・ウェブストアなどでは動作しません。
+      </div>
+
+      <!-- ============================== このページ ============================== -->
+      <section class="panel" id="panel-page" role="tabpanel" aria-labelledby="tab-page">
+        <div class="card">
+          <div class="actions first">
+            <button class="btn primary" id="addBtn">＋ ピンを追加</button>
+            <button class="btn ghost" id="pickCancel" hidden>キャンセル</button>
+          </div>
+          <label class="check show-toggle"><input type="checkbox" id="showPins" checked /> ページにピンを表示</label>
+        </div>
+
+        <form class="card pin-form" id="pinForm" hidden novalidate>
+          <div class="card-head">
+            <h2 id="formTitle">新しいピン</h2>
+            <button class="icon-btn" type="button" id="formClose" aria-label="閉じる">×</button>
+          </div>
+          <div class="form-target">
+            <span class="muted small">対象</span>
+            <span class="form-target-name" id="formTarget"></span>
+            <button class="link-btn" type="button" id="formRepick">選び直す</button>
+          </div>
+          <div class="field">
+            <span>状態</span>
+            <div class="status-seg" role="radiogroup" aria-label="状態" id="statusSeg"></div>
+          </div>
+          <label class="field">
+            <span>決まったこと・内容</span>
+            <textarea id="fWhat" rows="3" required placeholder="例）メインボタンの色はブランドグリーン（#2E7D32）で確定"></textarea>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>確認者</span>
+              <input type="text" id="fWho" list="whoList" placeholder="例）先方 田中様" />
+              <datalist id="whoList"></datalist>
+            </label>
+            <label class="field">
+              <span>日付</span>
+              <input type="date" id="fDate" />
+            </label>
+          </div>
+          <label class="field">
+            <span>メモ<small>（任意）</small></span>
+            <textarea id="fNote" rows="2" placeholder="例）10/20の定例で最終確認"></textarea>
+          </label>
+          <p class="form-error" id="formError" hidden></p>
+          <div class="actions">
+            <button class="btn primary" type="submit" id="formSave">保存</button>
+            <button class="btn ghost" type="button" id="formCancel">キャンセル</button>
+          </div>
+        </form>
+
+        <ul class="pin-list" id="pinList"></ul>
+
+        <div class="empty" id="pageEmpty">
+          <p class="empty-title">「言った・言わない」をなくします</p>
+          <ol>
+            <li>「＋ ピンを追加」を押して、決まったことに関係する要素をクリック</li>
+            <li>決まった内容・確認者・日付を記録</li>
+            <li>あとからページを開くと、要素の右上に番号が出ます（ホバーで経緯を表示）</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ============================== すべての合意 ============================== -->
+      <section class="panel" id="panel-all" role="tabpanel" aria-labelledby="tab-all" hidden>
+        <div class="card">
+          <input type="search" id="search" placeholder="内容・確認者・ページで絞り込み" />
+          <div class="chips filters" id="statusFilters"></div>
+        </div>
+        <div id="allGroups"></div>
+        <div class="empty" id="allEmpty" hidden>
+          <p class="empty-title">まだピンはありません</p>
+        </div>
+        <div class="card">
+          <h2>書き出し・共有</h2>
+          <p class="hint">議事録用のMarkdown、Excel用のCSV、チームで共有するためのJSONを作れます。JSONは読み込むと、同じピンの履歴をまとめます。</p>
+          <div class="actions">
+            <button class="btn" id="copyMd">Markdownをコピー</button>
+            <button class="btn" id="saveCsv">CSVを保存</button>
+          </div>
+          <div class="actions">
+            <button class="btn" id="saveJson">JSONで書き出し</button>
+            <label class="btn file-btn">JSONを読み込む<input type="file" id="loadJson" accept=".json,application/json" /></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== 設定 ============================== -->
+      <section class="panel" id="panel-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+        <div class="card">
+          <h2>表示</h2>
+          <label class="check"><input type="checkbox" id="setAuto" /> ピンのあるページを開いたら、自動でピンを表示する</label>
+          <label class="check"><input type="checkbox" id="setShare" /> 同じパスなら、別のドメイン（テスト環境 ↔ 本番）のピンも表示する</label>
+          <p class="hint">例：stg.example.jp/about/ で記録したピンを、www.example.jp/about/ でも表示します。</p>
+        </div>
+        <div class="card">
+          <h2>記録者</h2>
+          <label class="field">
+            <span>あなたの名前<small>（任意・ピンに「記録者」として残ります）</small></span>
+            <input type="text" id="setRecorder" placeholder="例）ディレクター 山田" />
+          </label>
+        </div>
+        <p class="about">v0.1.0 ・ ピンはこのパソコンのChromeに保存されます。チームで共有するときは「すべての合意」からJSONで書き出してください。 <span class="saved" id="setSaved" aria-live="polite"></span></p>
+      </section>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../lib/pins.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

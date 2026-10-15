@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "合意ピン",
+  "short_name": "Agreement Pins",
+  "version": "0.1.0",
+  "description": "ページの要素に「決まったこと・確認者・日付」をピン留め。経緯をホバーで確認でき、「言った・言わない」を防ぎます",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "合意ピンを開く",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+  },
+  "side_panel": { "default_path": "sidepanel/sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"]
+}
