@@ -24,6 +24,7 @@
           class: 'persona',
           type: 'button',
           role: 'radio',
+          'data-id': p.id,
           'aria-checked': String(p.id === state.persona),
           title: p.name,
           onclick: () => select(p.id),
@@ -55,16 +56,27 @@
     await apply();
   }
 
-  async function apply() {
-    if (!state.persona || !panel.usable()) return;
-    const p = persona();
-    try {
+  // 見え方の反映は1つずつ順番に行う。待っている間に別のペルソナが選ばれたら、古い反映はやめる
+  // （ズームの待ち時間などで古い処理が後から終わり、新しい見え方を上書きしないように）
+  let chain = Promise.resolve();
+  let seq = 0;
+  function queue(fn) {
+    const my = ++seq;
+    const current = () => my === seq;
+    chain = chain.then(() => (current() ? fn(current) : null)).catch((e) => snack(B.friendlyError(e), 5000));
+    return chain;
+  }
+
+  function apply() {
+    return queue(async (current) => {
+      if (!state.persona || !panel.usable()) return;
+      const p = persona();
       await syncZoom();
+      if (!current()) return;
       await B.call(panel.tabId, 'applyEffects', $('effectOn').checked ? { ...p.effects, hand: state.hand } : { thumb: p.effects.thumb, hand: state.hand });
+      if (!current()) return;
       await measure();
-    } catch (e) {
-      snack(B.friendlyError(e), 5000);
-    }
+    });
   }
 
   async function syncZoom() {
@@ -84,26 +96,34 @@
     }
   }
 
+  // ペルソナを続けて切り替えたとき、古い測定結果を後から表示しないように、最新の測定だけを反映する
+  let measureSeq = 0;
   async function measure() {
-    state.raw = await B.call(panel.tabId, 'measure');
+    const seq = ++measureSeq;
+    const id = state.persona;
+    const raw = await B.call(panel.tabId, 'measure');
+    if (seq !== measureSeq || id !== state.persona) return;
+    state.raw = raw;
     state.findings = PS.findings(state.persona, state.raw);
     render();
   }
 
-  async function stop() {
+  function stop() {
     state.persona = null;
     renderPicker();
     $('active').hidden = true;
     $('empty').hidden = false;
     $('zoomOn').checked = false;
-    if (panel.tabId != null) {
+    return queue(async () => {
+      if (panel.tabId == null) return;
       await syncZoom().catch(() => {});
       await B.callIfLoaded(panel.tabId, 'clear').catch(() => {});
-    }
+    });
   }
 
   // ================================================================ 表示
   function render() {
+    document.body.dataset.shown = state.persona || '';
     const lines = state.aiLines || PS.narrate(state.persona, state.findings);
     const voice = $('voice');
     voice.textContent = '';

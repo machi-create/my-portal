@@ -112,6 +112,23 @@ try {
     const pages = Number((await other.panel.textContent('#tiles .tile')).replace(/[^\d]/g, ''));
     assert.ok(pages >= 8, `pages=${pages}`);
   });
+
+  await step('タブを切り替えると、サイドパネルの対象ページも切り替わる', async () => {
+    const a = await env.context.newPage();
+    await a.goto(`${env.origin}/about/`);
+    // 実際のサイドパネルと同じく、対象タブを固定せずに開く（同じウィンドウのタブとして）
+    const panel = await env.context.newPage();
+    const errors = [];
+    panel.on('pageerror', (e) => errors.push(e.message));
+    panel.on('console', (m) => {
+      if (m.type() === 'error') errors.push(m.text());
+    });
+    await panel.goto(`chrome-extension://${env.extId}/sidepanel/sidepanel.html`);
+    const aId = await env.tabIdOf(env.sw, a.url());
+    await env.sw.evaluate((id) => chrome.tabs.update(id, { active: true }), aId);
+    await panel.waitForFunction(() => document.getElementById('targetUrl').textContent.includes('/about/'));
+    assert.deepEqual(errors, []);
+  });
 } finally {
   await env.close();
   finish();

@@ -42,7 +42,13 @@
     state.tabId = tab ? tabId : null;
     state.url = (tab && tab.url) || '';
     state.title = (tab && tab.title) || '';
-    if (state.port && tab) state.port.postMessage({ type: 'target', tabId });
+    if (state.port && tab) {
+      try {
+        state.port.postMessage({ type: 'target', tabId });
+      } catch (e) {
+        state.port = null;
+      }
+    }
     emit('target', { reason, tab });
   }
 
@@ -51,6 +57,11 @@
     state.windowId = win.id;
     try {
       state.port = chrome.runtime.connect({ name: 'wdt-panel' });
+      // バックグラウンドに受け口がない拡張機能では、すぐに切れる。切れた接続には送らない
+      state.port.onDisconnect.addListener(() => {
+        void chrome.runtime.lastError;
+        state.port = null;
+      });
     } catch (e) {
       state.port = null;
     }

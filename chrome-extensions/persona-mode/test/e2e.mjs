@@ -15,7 +15,15 @@ try {
 
   const pick = async (short) => {
     await panel.locator('.persona', { hasText: short }).click();
-    await panel.waitForFunction(() => document.querySelectorAll('.finding').length > 0, null, { timeout: 10000 });
+    // 選んだペルソナの結果が表示されるまで待つ（前のペルソナの結果を読まないように）
+    await panel.waitForFunction(
+      (s) => {
+        const on = document.querySelector('.persona[aria-checked="true"]');
+        return !!on && on.textContent.includes(s) && document.body.dataset.shown === on.dataset.id && document.querySelectorAll('.finding').length > 0;
+      },
+      short,
+      { timeout: 10000 },
+    );
   };
   const filter = () => page.evaluate(() => document.documentElement.style.getPropertyValue('filter'));
   const findings = () => panel.$$eval('.finding', (els) => els.map((e) => e.textContent));
