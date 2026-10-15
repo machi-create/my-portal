@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ワイヤーフレーム｜参考サイト・コラージュ</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="board.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <select id="boardSel" aria-label="ボード"></select>
+      </div>
+      <div class="toggles">
+        <label class="check"><input type="checkbox" id="optShot" checked /> 参考スクショを並べる</label>
+        <label class="check"><input type="checkbox" id="optText" /> 参考サイトの文言を表示</label>
+        <label class="check"><input type="checkbox" id="optMemo" checked /> メモを表示</label>
+      </div>
+      <div class="row">
+        <button class="btn small" id="copyMd">構成案をコピー</button>
+        <button class="btn small" id="saveSvg">SVG</button>
+        <button class="btn small" id="savePng">PNG</button>
+        <button class="btn small" id="print">印刷</button>
+      </div>
+    </header>
+
+    <main class="sheet">
+      <h1 id="title">構成案</h1>
+      <p class="muted small" id="summary"></p>
+      <ol class="sections" id="sections"></ol>
+      <div class="empty" id="empty" hidden>
+        <p class="empty-title">このボードにはまだセクションがありません</p>
+        サイドパネルの「セクションを摘む」で、参考サイトのセクションを集めてください。
+      </div>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../lib/wire.js"></script>
+    <script src="../lib/db.js"></script>
+    <script src="board.js"></script>
+  </body>
+</html>

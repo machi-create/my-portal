@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>参考サイト・コラージュ</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header no-tabs">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>参考サイト・コラージュ</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+    </header>
+
+    <main class="panel">
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        参考にしたいサイトを開いてください。
+      </div>
+
+      <div class="card">
+        <div class="board-row">
+          <label class="sr-only" for="boardSel">ボード</label>
+          <select id="boardSel"></select>
+          <button class="icon-btn" id="boardRename" type="button" title="名前を変更">✎</button>
+          <button class="icon-btn" id="boardNew" type="button" title="新しいボード">＋</button>
+          <button class="icon-btn" id="boardDelete" type="button" title="ボードを削除">🗑</button>
+        </div>
+        <div class="rename-row" id="renameRow" hidden>
+          <input type="text" id="boardName" maxlength="60" />
+          <button class="btn small" id="renameSave" type="button">保存</button>
+        </div>
+        <p class="confirm" id="deleteConfirm" hidden>
+          このボードと中のセクションをすべて削除します。
+          <button class="btn small danger" id="deleteYes" type="button">削除する</button>
+          <button class="btn small ghost" id="deleteNo" type="button">やめる</button>
+        </p>
+        <div class="actions">
+          <button class="btn primary" id="pickBtn">セクションを摘む</button>
+          <button class="btn ghost" id="pickCancel" hidden>キャンセル</button>
+        </div>
+        <label class="check opt"><input type="checkbox" id="withShot" checked /> 参考のスクリーンショットも保存する</label>
+        <p class="hint">気になるセクションをクリックすると、グレーのワイヤーに変換してボードに並べます。<kbd>↑</kbd> <kbd>↓</kbd> キーで選ぶ範囲を広げたり狭めたりできます。</p>
+      </div>
+
+      <ol class="items" id="items"></ol>
+
+      <div class="empty" id="empty">
+        <p class="empty-title">参考サイトの「いいところ」を集めて、構成案に</p>
+        <ol>
+          <li>参考サイトを開いて「セクションを摘む」</li>
+          <li>ファーストビュー・料金表・FAQなど、気になるセクションをクリック</li>
+          <li>別のサイトでも同じように摘んで、順番を並べ替え</li>
+          <li>「ワイヤーフレームを開く」で全体を確認・書き出し</li>
+        </ol>
+      </div>
+
+      <div class="card" id="exportCard" hidden>
+        <div class="actions first">
+          <button class="btn primary" id="openBoard">ワイヤーフレームを開く</button>
+        </div>
+        <div class="actions">
+          <button class="btn" id="copyMd">構成案をコピー</button>
+          <button class="btn" id="saveSvg">SVGを保存</button>
+        </div>
+        <p class="hint">SVG は Figma にドラッグ＆ドロップすると、編集できる図形として読み込めます。</p>
+      </div>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../lib/wire.js"></script>
+    <script src="../lib/db.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

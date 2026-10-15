@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>クラウド会計サービス｜サンプル</title>
+    <style>
+      body { margin: 0; font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; color: #222; }
+      .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+      header { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid #eee; }
+      header nav a { margin-left: 20px; color: #333; text-decoration: none; }
+      section { padding: 72px 0; }
+      .hero { background: #eef4ff; }
+      .hero .wrap { display: flex; gap: 40px; align-items: center; }
+      .hero h1 { font-size: 40px; margin: 0 0 16px; }
+      .hero .img { flex: 0 0 420px; height: 300px; background: #b9c8e8; }
+      .btn { display: inline-block; padding: 14px 28px; border-radius: 999px; background: #2952e0; color: #fff; text-decoration: none; margin-right: 12px; }
+      .btn.sub { background: #fff; color: #2952e0; border: 1px solid #2952e0; }
+      .cards { display: flex; gap: 24px; }
+      .card { flex: 1; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; }
+      .card img { width: 48px; height: 48px; }
+      .plans { display: flex; gap: 24px; }
+      .plan { flex: 1; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px; text-align: center; }
+      .price { font-size: 28px; font-weight: 700; }
+      .cta { background: #2952e0; color: #fff; text-align: center; padding: 56px 0; }
+      .cta .btn { background: #fff; color: #2952e0; }
+      footer { padding: 40px 32px; background: #111827; color: #ccc; }
+      footer a { color: #ccc; margin-right: 16px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/" class="logo">CloudBooks</a>
+      <nav><a href="#f">機能</a><a href="#p">料金</a><a href="#q">よくある質問</a><a href="#c">お問い合わせ</a></nav>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>経理の時間を、半分に。</h1>
+          <p>銀行口座やカードと連携して、仕訳を自動で作成。確定申告までまとめて終わります。</p>
+          <a class="btn" href="#c">無料で試す</a><a class="btn sub" href="#d">資料ダウンロード</a>
+        </div>
+        <div class="img" role="img" aria-label="画面イメージ" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E')"></div>
+      </div>
+    </section>
+    <section id="f">
+      <div class="wrap">
+        <h2>選ばれる3つの理由</h2>
+        <div class="cards">
+          <div class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%2399b'/%3E%3C/svg%3E" alt="" /><h3>自動で仕訳</h3><p>明細を取り込むだけで、勘定科目を自動で判定します。</p></div>
+          <div class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%2399b'/%3E%3C/svg%3E" alt="" /><h3>スマホで完結</h3><p>レシートを撮影するだけで、経費の登録が終わります。</p></div>
+          <div class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Ccircle cx='24' cy='24' r='24' fill='%2399b'/%3E%3C/svg%3E" alt="" /><h3>税理士と共有</h3><p>帳簿をそのまま共有でき、やりとりの手間が減ります。</p></div>
+        </div>
+      </div>
+    </section>
+    <section id="p">
+      <div class="wrap">
+        <h2>料金プラン</h2>
+        <div class="plans">
+          <div class="plan"><h3>ライト</h3><p class="price">980円<small>/月</small></p><p>個人事業主向け</p></div>
+          <div class="plan"><h3>スタンダード</h3><p class="price">1,980円<small>/月</small></p><p>確定申告まで対応</p></div>
+          <div class="plan"><h3>プロ</h3><p class="price">3,980円<small>/月</small></p><p>法人・複数人で利用</p></div>
+        </div>
+      </div>
+    </section>
+    <section id="q">
+      <div class="wrap">
+        <h2>よくある質問</h2>
+        <details><summary>無料期間はありますか？</summary><p>30日間無料でお試しいただけます。</p></details>
+        <details><summary>途中でプランを変更できますか？</summary><p>いつでも変更できます。</p></details>
+        <details><summary>解約に費用はかかりますか？</summary><p>かかりません。</p></details>
+      </div>
+    </section>
+    <section class="cta" id="c">
+      <div class="wrap">
+        <h2>まずは30日間、無料でお試しください</h2>
+        <a class="btn" href="#signup">無料で始める</a>
+      </div>
+    </section>
+    <footer><a href="/terms">利用規約</a><a href="/privacy">プライバシーポリシー</a><a href="/company">運営会社</a><a href="/help">ヘルプ</a><a href="/news">お知らせ</a><p>© 2026 CloudBooks</p></footer>
+  </body>
+</html>

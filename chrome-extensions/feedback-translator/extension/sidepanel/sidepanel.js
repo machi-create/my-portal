@@ -67,7 +67,7 @@
     try {
       const cap = await B.call(panel.tabId, 'prepareCapture');
       if (!cap) return;
-      const dataUrl = await chrome.tabs.captureVisibleTab(panel.windowId, { format: 'png' });
+      const dataUrl = await B.captureTab(panel.tabId, { format: 'png' });
       state.shot = await B.cropImage(dataUrl, cap.rect, cap.dpr, 1400);
     } catch (e) {
       state.shot = null;

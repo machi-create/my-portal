@@ -28,11 +28,11 @@ const pinsIn = (page) => page.evaluate(() => {
 });
 
 try {
-  const { page, panel, tabId } = await env.openWithPanel(`${env.origin}/about/`);
+  const { page, panel, tabId, front } = await env.openWithPanel(`${env.origin}/about/`);
   await panel.waitForFunction(() => document.getElementById('targetUrl').textContent.includes('/about/'));
 
   async function pickIn(selector) {
-    await page.bringToFront();
+    await front();
     await page.waitForFunction(() => {
       const host = document.getElementById('wdt-overlay-host');
       return host && host.shadowRoot.querySelector('.pick-bar');

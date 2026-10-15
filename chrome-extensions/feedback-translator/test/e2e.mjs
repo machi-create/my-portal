@@ -9,13 +9,13 @@ const env = await launch({ ext: path.resolve(here, '../extension'), fixtures: pa
 const { step, shot, finish } = runner();
 
 try {
-  const { page, panel, tabId } = await env.openWithPanel(`${env.origin}/lp.html`);
+  const { page, panel, tabId, front } = await env.openWithPanel(`${env.origin}/lp.html`);
   await panel.waitForFunction(() => document.getElementById('targetUrl').textContent.includes('lp.html'));
 
   /** パネルで「要素を選ぶ」→ ページ上の要素をクリック */
   async function pickElement(selector) {
     await panel.click((await panel.isVisible('#repick')) ? '#repick' : '#pickBtn');
-    await page.bringToFront();
+    await front();
     await page.waitForFunction(() => {
       const host = document.getElementById('wdt-overlay-host');
       return host && host.shadowRoot && host.shadowRoot.querySelector('.pick-bar');
@@ -48,7 +48,8 @@ try {
       const img = document.getElementById('shotImg');
       return { w: img.naturalWidth, h: img.naturalHeight };
     });
-    assert.ok(size.w > 100 && size.h > 40, JSON.stringify(size));
+    // ボタン（約130×37px）＋周りの余白24pxずつ ≒ 178×85px
+    assert.ok(size.w > 150 && size.w < 260 && size.h > 60 && size.h < 140, JSON.stringify(size));
   });
 
   await step('「もっとパッと目立つ感じに」から具体的な修正案が出る', async () => {

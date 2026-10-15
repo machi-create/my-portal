@@ -63,16 +63,31 @@ export async function launch(opts) {
     }, url);
   }
 
-  /** ページを開き、そのタブを対象にしたサイドパネル（通常タブとして）を開く */
+  /**
+   * ページを開き、そのタブを対象にしたサイドパネルを「別ウィンドウ」で開く。
+   * 実際のサイドパネルと同じく、ページのウィンドウでは対象ページが表示中のままになる（スクリーンショットが正しく撮れる）。
+   */
   async function openWithPanel(pageUrl, panelPath = 'sidepanel/sidepanel.html', size = { width: 380, height: 1100 }) {
     const page = await context.newPage();
     await page.goto(pageUrl);
-    const panel = await context.newPage();
+    const tabId = await sw.evaluate(async (u) => {
+      const tabs = await chrome.tabs.query({});
+      const t = tabs.find((x) => x.url === u) || tabs.find((x) => x.url && x.url.startsWith(u));
+      return t ? t.id : null;
+    }, page.url());
+    const panelUrl = `chrome-extension://${extId}/${panelPath}?tabId=${tabId}`;
+    const [panel] = await Promise.all([
+      context.waitForEvent('page', (p) => p.url().startsWith(`chrome-extension://${extId}/${panelPath}`)),
+      sw.evaluate((url) => chrome.windows.create({ url, type: 'popup', width: 380, height: 1100 }), panelUrl),
+    ]);
+    await panel.waitForLoadState('domcontentloaded');
     await panel.setViewportSize(size);
-    await panel.goto(`chrome-extension://${extId}/${panelPath}`);
-    const tabId = await tabIdOf(panel, page.url());
-    await panel.goto(`chrome-extension://${extId}/${panelPath}?tabId=${tabId}`);
-    return { page, panel, tabId };
+    // 実際のサイドパネルでは対象タブが常に表示中なので、テストでも拡張機能から見て表示中にする
+    const front = async () => {
+      await page.bringToFront();
+      await panel.evaluate((t) => chrome.tabs.update(t, { active: true }), tabId);
+    };
+    return { page, panel, tabId, front };
   }
 
   async function close() {

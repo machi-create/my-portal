@@ -70,9 +70,11 @@
     return msg || '不明なエラーが発生しました';
   }
 
-  /** 表示中のタブを画像にする（サイドパネルからの呼び出し用） */
-  async function captureTab(windowId) {
-    return chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
+  /** 対象のタブが表示されているときだけ、画面を画像にする（別のタブを写してしまわないように） */
+  async function captureTab(tabId, opts) {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab.active) throw new Error('対象のタブが表示されていません');
+    return chrome.tabs.captureVisibleTab(tab.windowId, opts || { format: 'png' });
   }
 
   /** 画像（dataURL）を切り抜く。rect はビューポート上の CSS ピクセル */
