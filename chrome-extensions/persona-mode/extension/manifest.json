@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ペルソナ憑依モード",
+  "short_name": "Persona Mode",
+  "version": "0.1.0",
+  "description": "シニア・色覚の多様性・片手操作・弱視・低速回線・初めての人になりきって、見え方を再現し、つまずく箇所をページから自動で探します",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "ペルソナ憑依モードを開く",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+  },
+  "side_panel": { "default_path": "sidepanel/sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"]
+}

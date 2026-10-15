@@ -1,0 +1,5 @@
+/* ペルソナ憑依モード：ページ上の表示（chrome.scripting.insertCSS で挿入） */
+::highlight(wdt-find) {
+  background-color: rgba(250, 178, 25, 0.55);
+  text-decoration: underline wavy #d03b3b;
+}

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
-const FILES = ['base.css', 'ui.js', 'bridge.js', 'panel.js', 'background.js', 'page.js', 'picker.js', 'selector.js', 'ai.js'];
+const FILES = ['base.css', 'ui.js', 'bridge.js', 'panel.js', 'background.js', 'page.js', 'picker.js', 'selector.js', 'ai.js', 'color.js'];
 const check = process.argv.includes('--check');
 
 const targets = fs

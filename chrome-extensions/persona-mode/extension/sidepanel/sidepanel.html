@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ペルソナ憑依モード</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header no-tabs">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>ペルソナ憑依モード</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+    </header>
+
+    <main class="panel">
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        確認したいページを開いてください。
+      </div>
+
+      <div class="card">
+        <h2>だれになって見る？</h2>
+        <div class="personas" id="personas" role="radiogroup" aria-label="ペルソナ"></div>
+      </div>
+
+      <div id="active" hidden>
+        <div class="card persona-card">
+          <div class="persona-head">
+            <div>
+              <div class="persona-name" id="pName"></div>
+              <div class="persona-desc" id="pDesc"></div>
+            </div>
+            <button class="btn small" id="stopBtn">解除</button>
+          </div>
+          <div class="controls">
+            <label class="check" id="effectRow"><input type="checkbox" id="effectOn" checked /> 見え方を再現する <span class="muted small" id="effectDesc"></span></label>
+            <label class="check" id="zoomRow" hidden><input type="checkbox" id="zoomOn" /> 文字を大きくして見る（ズーム125%）</label>
+            <div class="row" id="handRow" hidden>
+              <span class="small muted">持ち手</span>
+              <div class="seg" role="radiogroup" aria-label="持ち手">
+                <button class="seg-btn" role="radio" aria-checked="true" data-hand="right">右手</button>
+                <button class="seg-btn" role="radio" aria-checked="false" data-hand="left">左手</button>
+              </div>
+            </div>
+            <p class="hint" id="personaNote" hidden></p>
+          </div>
+        </div>
+
+        <div class="card voice-card">
+          <div class="card-head">
+            <h2>ひとりごと</h2>
+            <button class="btn ghost small" id="aiVoice" hidden><span class="ai-badge">AI</span> 実況してもらう</button>
+          </div>
+          <ul class="voice" id="voice"></ul>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>つまずき</h2>
+            <span class="muted small" id="findingCount"></span>
+          </div>
+          <ul class="findings" id="findings"></ul>
+          <div class="actions">
+            <button class="btn ghost small" id="copyReport">結果をコピー</button>
+            <button class="btn ghost small" id="remeasure">測り直す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty" id="empty">
+        <p class="empty-title">ユーザーになりきって、ページを見てみます</p>
+        <ul>
+          <li>見え方を再現（ぼかし・色覚・セピア・ズーム・親指の届く範囲）</li>
+          <li>そのペルソナがつまずきそうな箇所を、ページから自動で探します</li>
+          <li>つまずきを「ひとりごと」にして、クライアントにも伝わる形に</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>AI</h2>
+        <div id="aiStatus"><p class="hint">確認中…</p></div>
+      </div>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../shared/ai.js"></script>
+    <script src="../lib/personas.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
