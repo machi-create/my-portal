@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>フィードバック翻訳機</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>フィードバック翻訳機</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+      <nav class="tabs" role="tablist" aria-label="機能">
+        <button class="tab" role="tab" id="tab-fb" aria-controls="panel-fb" aria-selected="true">要望 → 修正指示</button>
+        <button class="tab" role="tab" id="tab-easy" aria-controls="panel-easy" aria-selected="false">専門用語 → やさしく</button>
+        <button class="tab" role="tab" id="tab-set" aria-controls="panel-set" aria-selected="false">設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        Chromeの設定画面・新しいタブ・ウェブストアなどでは動作しません。確認したいページを開いてください。
+      </div>
+
+      <!-- ============================== 要望 → 修正指示 ============================== -->
+      <section class="panel" id="panel-fb" role="tabpanel" aria-labelledby="tab-fb">
+        <div class="card">
+          <div class="card-head">
+            <h2><span class="step">1</span>修正したい要素</h2>
+            <button class="link-btn" id="repick" type="button" hidden>選び直す</button>
+          </div>
+          <div id="pickEmpty">
+            <p class="hint">ページ上で、先方から指摘があった箇所（ボタン・見出し・文章など）をクリックして選びます。</p>
+            <div class="actions">
+              <button class="btn primary" id="pickBtn">ページ上で要素を選ぶ</button>
+              <button class="btn ghost" id="pickCancel" hidden>キャンセル</button>
+            </div>
+          </div>
+          <div id="infoBox" hidden>
+            <div class="target-line">
+              <span class="pill accent" id="infoRole"></span>
+              <span class="target-text" id="infoText"></span>
+              <button class="icon-btn" id="focusBtn" type="button" title="ページ上で場所を表示">↗</button>
+            </div>
+            <code class="selector" id="infoSelector"></code>
+            <dl class="style-grid" id="styleGrid"></dl>
+            <figure class="shot" id="shotBox" hidden>
+              <img id="shotImg" alt="選んだ要素のスクリーンショット" />
+              <figcaption>
+                <button class="link-btn" id="shotCopy" type="button">画像をコピー</button>
+                <button class="link-btn" id="shotSave" type="button">保存</button>
+                <button class="link-btn" id="shotRetake" type="button">撮り直す</button>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">2</span>先方の要望</h2>
+          <textarea id="feedback" rows="3" placeholder="例）もっとパッと目立つ感じにしてほしい"></textarea>
+          <div class="chips quick" id="quickChips" aria-label="よくある要望"></div>
+          <div class="actions">
+            <button class="btn primary" id="analyzeBtn">修正案を作る</button>
+          </div>
+        </div>
+
+        <div class="card" id="proposalCard" hidden>
+          <div class="card-head">
+            <h2><span class="step">3</span>修正案</h2>
+            <span class="row small muted" id="intentLine"></span>
+          </div>
+          <p class="hint" id="noIntent" hidden></p>
+          <ul class="proposals" id="proposals"></ul>
+          <ul class="notes" id="notes"></ul>
+          <div class="actions">
+            <button class="btn" id="previewBtn" aria-pressed="false">ページでプレビュー</button>
+            <span class="muted small" id="previewState"></span>
+          </div>
+        </div>
+
+        <div class="card" id="outputCard" hidden>
+          <div class="card-head">
+            <h2><span class="step">4</span>書き出し</h2>
+            <div class="seg" role="radiogroup" aria-label="書き出し先">
+              <button class="seg-btn" role="radio" aria-checked="true" data-out="dev">開発者向け</button>
+              <button class="seg-btn" role="radio" aria-checked="false" data-out="client">クライアント向け</button>
+            </div>
+          </div>
+          <pre class="code" id="output"></pre>
+          <div class="actions">
+            <button class="btn" id="copyOut">コピー</button>
+            <button class="btn" id="issueBtn">GitHub Issueを作成</button>
+            <button class="btn ghost" id="aiPolish" hidden><span class="ai-badge">AI</span> 文面を整える</button>
+          </div>
+          <p class="hint" id="issueHint"></p>
+        </div>
+      </section>
+
+      <!-- ============================== 専門用語 → やさしく ============================== -->
+      <section class="panel" id="panel-easy" role="tabpanel" aria-labelledby="tab-easy" hidden>
+        <div class="card">
+          <h2>専門用語をやさしい言葉に</h2>
+          <p class="hint">エンジニアやデザイナーの説明を、クライアントに伝わる言葉に置き換えます。</p>
+          <textarea id="easyInput" rows="6" placeholder="例）CLSを改善するため、画像にwidth/heightを指定し、Webフォントはfont-display: swapにします。"></textarea>
+          <div class="actions">
+            <button class="btn primary" id="easyBtn">やさしく言い換える</button>
+          </div>
+        </div>
+        <div class="card" id="easyResult" hidden>
+          <div class="card-head">
+            <h2>言い換え</h2>
+            <button class="link-btn" id="easyCopy" type="button">コピー</button>
+          </div>
+          <div class="easy-text" id="easyText"></div>
+          <div class="actions" id="easyAiRow" hidden>
+            <button class="btn ghost" id="easyAi"><span class="ai-badge">AI</span> 自然な文章にする</button>
+          </div>
+          <h3 class="glossary-title">出てきた用語</h3>
+          <dl class="glossary" id="easyTerms"></dl>
+        </div>
+      </section>
+
+      <!-- ============================== 設定 ============================== -->
+      <section class="panel" id="panel-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+        <div class="card">
+          <h2>Issue の作成先</h2>
+          <label class="field">
+            <span>GitHub リポジトリ</span>
+            <input type="text" id="setRepo" placeholder="owner/repo" spellcheck="false" />
+            <small>「GitHub Issueを作成」で、本文入りの Issue 作成画面を開きます（APIキーは不要です）。</small>
+          </label>
+          <label class="field">
+            <span>ラベル<small>（カンマ区切り）</small></span>
+            <input type="text" id="setLabels" placeholder="design, feedback" spellcheck="false" />
+          </label>
+        </div>
+        <div class="card">
+          <h2>クライアント向け文面</h2>
+          <label class="field">
+            <span>文末の署名</span>
+            <input type="text" id="setSignature" placeholder="例）ディレクター 山田" />
+          </label>
+          <label class="check"><input type="checkbox" id="setAutoShot" checked /> 要素を選んだらスクリーンショットを撮る</label>
+        </div>
+        <div class="card">
+          <h2>AI</h2>
+          <div id="aiStatus"><p class="hint">確認中…</p></div>
+          <p class="hint">修正案はルールで作るため、AIがなくてもすべての機能を使えます。Chrome内蔵AIが使える環境では、文面の言い換えにAIを使えます（端末内で処理され、外部には送信されません）。</p>
+        </div>
+        <p class="about">v0.1.0 <span class="saved" id="setSaved" aria-live="polite"></span></p>
+      </section>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../shared/ai.js"></script>
+    <script src="../lib/color.js"></script>
+    <script src="../lib/rules.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

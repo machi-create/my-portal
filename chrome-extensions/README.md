@@ -1,0 +1,32 @@
+# Webディレクター向け Chrome拡張機能
+
+Webディレクターの「確認・調整・提案・進行」を助ける拡張機能のシリーズです。必要なものだけインストールできるよう、道具ごとに分けています。
+
+| 拡張機能 | できること | フォルダ |
+| --- | --- | --- |
+| テストアップチェッカー | 原稿とページの文言照合、公開前の消し忘れ（noindex・ダミー文言・テスト環境URLなど）チェック | [`testup-checker`](testup-checker/) |
+| フィードバック翻訳機 | 「もっと目立たせて」などの曖昧な要望を、実際のCSS値から具体的な修正案に変換。プレビュー・修正依頼文・Issue起票 | [`feedback-translator`](feedback-translator/) |
+
+## インストール（共通）
+
+1. このリポジトリを GitHub の「Code → Download ZIP」でダウンロードして展開します
+2. Chrome で `chrome://extensions` を開き、右上の **デベロッパーモード** をオンにします
+3. **パッケージ化されていない拡張機能を読み込む** で、使いたい拡張機能の `extension` フォルダを選びます
+
+## 開発者向け
+
+```
+chrome-extensions/
+  _shared/        共通部品の正本（スタイル・ページ上での要素選択・サイドパネルの共通処理・AIなど）
+    sync.mjs      共通部品を各拡張機能の extension/shared/ にコピーする
+    make-icon.py  アイコンを作る
+  _test/          E2Eテストの共通ハーネス（拡張機能を読み込んだ Chromium を起動）
+  <拡張機能>/
+    extension/    Chrome に読み込むフォルダ
+    test/         単体テスト・E2Eテスト
+```
+
+```sh
+node chrome-extensions/_shared/sync.mjs          # 共通部品を反映
+node chrome-extensions/_shared/sync.mjs --check  # 反映漏れがないか確認
+```
