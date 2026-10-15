@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LP抑揚グラフ</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>LP抑揚グラフ</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+      <nav class="tabs" role="tablist" aria-label="表示">
+        <button class="tab" role="tab" id="tab-lp" aria-controls="panel-lp" aria-selected="true">このLP</button>
+        <button class="tab" role="tab" id="tab-cmp" aria-controls="panel-cmp" aria-selected="false">比較<span class="tab-count" id="savedCount" hidden></span></button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        LPのページを開いてください。
+      </div>
+
+      <!-- ============================== このLP ============================== -->
+      <section class="panel" id="panel-lp" role="tabpanel" aria-labelledby="tab-lp">
+        <div class="row">
+          <button class="btn primary" id="measureBtn">計測する</button>
+          <span class="muted small" id="viewport"></span>
+        </div>
+
+        <div id="lpResult" hidden>
+          <div class="tiles" id="tiles"></div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>気づき</h2>
+              <label class="check small"><input type="checkbox" id="showZones" checked /> ページに区間を表示</label>
+            </div>
+            <ul class="insights" id="insights"></ul>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>ページの抑揚</h2>
+              <button class="link-btn" id="toggleTable" type="button" aria-pressed="false">表で見る</button>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <span><i class="lg-dot"></i>申し込みボタン</span>
+              <span><i class="lg-tick"></i>見出し（長いほど上位）</span>
+              <span><i class="lg-zone"></i>気になる区間</span>
+            </div>
+            <div id="chart"></div>
+            <div class="table-wrap" id="tableWrap" hidden></div>
+            <p class="hint">グラフの行をクリックすると、ページのその位置へ移動します。1行＝画面の半分。</p>
+          </div>
+
+          <div class="card">
+            <h2>ファーストビュー（最初の1画面）</h2>
+            <ul class="fv" id="firstView"></ul>
+          </div>
+
+          <div class="card">
+            <h2>比較用に保存</h2>
+            <p class="hint first">競合LPや改修前のLPを保存しておくと、「比較」タブで並べて見られます。</p>
+            <div class="save-row">
+              <input type="text" id="saveName" maxlength="40" placeholder="名前（例：競合A社）" />
+              <button class="btn" id="saveBtn">保存</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty" id="lpEmpty">
+          <p class="empty-title">LPの「抑揚」を見える化します</p>
+          <ul>
+            <li>スクロール位置ごとの文字量・画像の割合</li>
+            <li>申し込みボタンと見出しの位置</li>
+            <li>ボタンが長く出てこない区間、文字が続く区間</li>
+            <li>競合LPとの並べ比べ</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================== 比較 ============================== -->
+      <section class="panel" id="panel-cmp" role="tabpanel" aria-labelledby="tab-cmp" hidden>
+        <div class="card">
+          <h2>比べるLP（3つまで）</h2>
+          <ul class="saved-list" id="savedList"></ul>
+          <p class="hint" id="savedEmpty">「このLP」タブの「比較用に保存」で、LPを保存してください。</p>
+        </div>
+        <div class="card" id="cmpCard" hidden>
+          <h2>文字量とボタンの位置</h2>
+          <div class="legend" aria-hidden="true">
+            <span><i class="lg-bar"></i>文字量（同じ目盛り）</span>
+            <span><i class="lg-dot"></i>申し込みボタン</span>
+          </div>
+          <div id="cmpChart"></div>
+        </div>
+        <div class="card" id="cmpTableCard" hidden>
+          <h2>数字で比べる</h2>
+          <div class="table-wrap"><table class="lr-table cmp" id="cmpTable"></table></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../lib/rhythm.js"></script>
+    <script src="../lib/chart.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

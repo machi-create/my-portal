@@ -1,0 +1,396 @@
+/* 配色はデータ可視化の検証済みパレット（カテゴリ1〜3）を使用。ライト・ダークとも検証済み */
+:root {
+  --accent: #2a78d6;
+  --accent-strong: #1c5cab;
+  --accent-soft: #e6f0fc;
+  --series-text: #2a78d6;
+  --series-cta: #eb6834;
+  --series-image: #1baf7a;
+  --chart-grid: #e1e0d9;
+  --chart-base: #c3c2b7;
+  --chart-muted: #898781;
+  --zone: rgba(250, 178, 25, 0.16);
+  --zone-edge: #fab219;
+  --status-good: #0ca30c;
+  --status-warn: #b97c00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #3987e5;
+    --accent-strong: #86b6ef;
+    --accent-soft: #17283f;
+    --series-text: #3987e5;
+    --series-cta: #d95926;
+    --series-image: #199e70;
+    --chart-grid: #2c2c2a;
+    --chart-base: #383835;
+    --chart-muted: #898781;
+    --zone: rgba(250, 178, 25, 0.14);
+    --status-warn: #fab219;
+  }
+}
+
+.hint.first {
+  margin-top: 0;
+}
+
+#lpResult {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tiles .tile b {
+  font-size: 17px;
+}
+
+/* ---------------------------------------------------------------- 気づき */
+.insights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.insight {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.insight:last-child {
+  border-bottom: 0;
+}
+
+.insight.clickable:hover {
+  background: var(--surface-2);
+}
+
+.sev {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sev.warn {
+  background: var(--zone-edge);
+  color: #1f2330;
+}
+
+.sev.info {
+  background: var(--info);
+}
+
+.sev.good {
+  background: var(--status-good);
+}
+
+.insight-title {
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.insight-title small {
+  margin-left: 4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.insight-detail {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+/* ---------------------------------------------------------------- グラフ */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--series-cta);
+}
+
+.lg-tick {
+  width: 12px;
+  height: 2px;
+  background: var(--text);
+}
+
+.lg-zone {
+  width: 12px;
+  height: 10px;
+  background: var(--zone);
+  border-left: 3px solid var(--zone-edge);
+}
+
+.lg-bar {
+  width: 14px;
+  height: 8px;
+  border-radius: 0 3px 3px 0;
+  background: var(--series-text);
+}
+
+.lr-chart {
+  position: relative;
+}
+
+.lr-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.lr-col-title {
+  fill: var(--text);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.lr-col-sub,
+.lr-tick {
+  fill: var(--chart-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lr-grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.lr-base {
+  stroke: var(--chart-base);
+  stroke-width: 1;
+}
+
+.lr-text {
+  fill: var(--series-text);
+}
+
+.lr-image {
+  fill: var(--series-image);
+}
+
+.lr-cta {
+  fill: var(--series-cta);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.lr-heading {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.lr-zone {
+  fill: var(--zone);
+}
+
+.lr-zone-edge {
+  fill: var(--zone-edge);
+}
+
+.lr-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.lr-hover {
+  fill: var(--text);
+  opacity: 0.06;
+}
+
+.lr-tip {
+  position: absolute;
+  z-index: 3;
+  min-width: 150px;
+  max-width: 240px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  pointer-events: none;
+  font-size: 11.5px;
+}
+
+.lr-tip-head {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.lr-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.6;
+}
+
+.lr-tip-row b {
+  color: var(--text);
+}
+
+.lr-tip-row span {
+  color: var(--muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.lr-key {
+  flex: none;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.lr-key.text {
+  background: var(--series-text);
+}
+.lr-key.image {
+  background: var(--series-image);
+}
+.lr-key.cta {
+  background: var(--series-cta);
+}
+.lr-key.heading {
+  background: var(--text);
+}
+
+.table-wrap {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.lr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.lr-table th,
+.lr-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.lr-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+.lr-table td:nth-child(2),
+.lr-table td:nth-child(3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lr-table.cmp td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lr-table.cmp tbody th {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- その他 */
+.fv {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+  font-size: 12.5px;
+}
+
+.fv li.off {
+  color: var(--muted);
+}
+
+.fv b {
+  margin-right: 4px;
+  color: var(--status-good);
+}
+
+.fv li.off b {
+  color: var(--status-warn);
+}
+
+.save-row {
+  display: flex;
+  gap: 6px;
+}
+
+.saved-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.saved-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.saved-list li:last-child {
+  border-bottom: 0;
+}
+
+.saved-list .name {
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-list .meta {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 11px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-list input {
+  accent-color: var(--accent);
+}

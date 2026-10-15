@@ -758,3 +758,13 @@ output {
   background: var(--purple-soft);
   color: var(--purple);
 }
+
+/* 画面には出さず、読み上げだけに使う */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
