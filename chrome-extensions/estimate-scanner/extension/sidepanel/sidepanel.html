@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>見積もり逆算スキャナー</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>見積もり逆算スキャナー</span>
+      </div>
+      <div class="target"><span class="target-url" id="targetUrl">—</span></div>
+      <nav class="tabs" role="tablist" aria-label="表示">
+        <button class="tab" role="tab" id="tab-scan" aria-controls="panel-scan" aria-selected="true">解析</button>
+        <button class="tab" role="tab" id="tab-est" aria-controls="panel-est" aria-selected="false">見積もり</button>
+        <button class="tab" role="tab" id="tab-price" aria-controls="panel-price" aria-selected="false">単価の設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="unavailable" id="unavailable" hidden>
+        <strong>このページでは使用できません</strong>
+        参考にしたいサイトのページを開いてください。
+      </div>
+
+      <!-- ============================== 解析 ============================== -->
+      <section class="panel" id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+        <div class="card">
+          <p class="hint first">クライアントが「こんな感じで」と出してきたサイトの規模と機能を読み取り、見積もりのたたき台を作ります。</p>
+          <div class="actions">
+            <button class="btn primary" id="scanBtn">このサイトを解析する</button>
+          </div>
+          <label class="check opt"><input type="checkbox" id="optSamples" checked /> 下層ページもいくつか開いて確認する（最大12ページ）</label>
+          <ol class="steps" id="steps" hidden></ol>
+        </div>
+
+        <div id="result" hidden>
+          <div class="tiles" id="tiles"></div>
+
+          <div class="card">
+            <div class="card-head"><h2>サイトの構成</h2><span class="muted small" id="pagesSource"></span></div>
+            <h3 class="sub">更新がありそうな一覧（CMS向き）</h3>
+            <ul class="glist" id="collections"></ul>
+            <h3 class="sub">固定ページ</h3>
+            <ul class="glist" id="pages"></ul>
+          </div>
+
+          <div class="card">
+            <h2>使われている技術</h2>
+            <div class="chips tech" id="tech"></div>
+          </div>
+
+          <div class="card">
+            <h2>機能・動き</h2>
+            <ul class="features" id="features"></ul>
+          </div>
+
+          <details class="card samples">
+            <summary>確認したページ（<span id="sampleCount">0</span>）</summary>
+            <ul class="sample-list" id="samples"></ul>
+          </details>
+
+          <div class="actions">
+            <button class="btn primary" id="toEstimate">見積もりを見る</button>
+          </div>
+        </div>
+
+        <div class="empty" id="scanEmpty">
+          <p class="empty-title">わかること</p>
+          <ul>
+            <li>ページ数（sitemap.xml から）と、「一覧＋詳細」になりそうなページ</li>
+            <li>テンプレートの種類の目安</li>
+            <li>フォーム・多言語・検索・会員・カート・地図・動画</li>
+            <li>スライダーやスクロール連動などの動き</li>
+            <li>WordPress・Shopify・STUDIO などの技術</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================== 見積もり ============================== -->
+      <section class="panel" id="panel-est" role="tabpanel" aria-labelledby="tab-est" hidden>
+        <div class="empty" id="estEmpty">
+          <p class="empty-title">先に「解析」タブでサイトを解析してください</p>
+        </div>
+        <div id="estBox" hidden>
+          <div class="card total-card">
+            <div class="total-label">概算（税抜）</div>
+            <div class="total" id="total">—</div>
+            <div class="range muted" id="range"></div>
+            <p class="hint" id="quoteNote" hidden></p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>内訳</h2><button class="link-btn" id="resetOverrides" type="button">数量を元に戻す</button></div>
+            <p class="hint first">チェックを外すと金額から除きます。数量は手で直せます。</p>
+            <ul class="lines" id="lines"></ul>
+          </div>
+          <div class="actions">
+            <button class="btn" id="copyTsv">Excel用にコピー</button>
+            <button class="btn" id="copyMd">Markdownでコピー</button>
+          </div>
+          <p class="hint">※ 公開サイトの構造から機械的に推定したたたき台です。原稿作成・撮影・保守運用・サーバー費用は含みません。単価は「単価の設定」で自社の金額に置き換えてください。</p>
+        </div>
+      </section>
+
+      <!-- ============================== 単価 ============================== -->
+      <section class="panel" id="panel-price" role="tabpanel" aria-labelledby="tab-price" hidden>
+        <div class="card">
+          <h2>単価（円）</h2>
+          <p class="hint first">初期値は仮の金額です。自社の単価に置き換えると、見積もりにすぐ反映されます。</p>
+          <div class="prices" id="prices"></div>
+          <div class="actions">
+            <button class="btn ghost" id="resetPrices">初期値に戻す</button>
+            <span class="saved" id="priceSaved" aria-live="polite"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../shared/bridge.js"></script>
+    <script src="../shared/panel.js"></script>
+    <script src="../lib/detect.js"></script>
+    <script src="../lib/estimate.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

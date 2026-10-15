@@ -8,6 +8,7 @@ Webディレクターの「確認・調整・提案・進行」を助ける拡�
 | フィードバック翻訳機 | 「もっと目立たせて」などの曖昧な要望を、実際のCSS値から具体的な修正案に変換。プレビュー・修正依頼文・Issue起票 | [`feedback-translator`](feedback-translator/) |
 | 合意ピン | 要素に「決まったこと・確認者・日付」をピン留め。経緯をホバーで確認、Markdown/CSV/JSONで共有 | [`agreement-pins`](agreement-pins/) |
 | 参考サイト・コラージュ | 参考サイトのセクションをクリックでワイヤーフレーム化。集めて並べ替え、SVG（Figma）・PNG・構成案で書き出し | [`reference-collage`](reference-collage/) |
+| 見積もり逆算スキャナー | 参考サイトのページ数・テンプレート・フォーム・多言語・動き・技術を読み取り、見積もりのたたき台を作成 | [`estimate-scanner`](estimate-scanner/) |
 
 ## インストール（共通）
 
