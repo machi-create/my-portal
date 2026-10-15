@@ -1,0 +1,182 @@
+/* テストアップチェッカー：ページ上の表示（chrome.scripting.insertCSS で挿入） */
+
+/* ---------- 原稿照合のハイライト ---------- */
+::highlight(tuc-ok) {
+  background-color: rgba(34, 197, 94, 0.2);
+}
+::highlight(tuc-variant) {
+  background-color: rgba(249, 115, 22, 0.32);
+  text-decoration: underline wavy rgba(234, 88, 12, 0.9);
+}
+::highlight(tuc-diff) {
+  background-color: rgba(250, 204, 21, 0.5);
+  text-decoration: underline wavy #dc2626;
+}
+::highlight(tuc-extra) {
+  background-color: rgba(168, 85, 247, 0.24);
+  text-decoration: underline dotted #9333ea;
+}
+
+/* ---------- 公開前チェックのハイライト ---------- */
+::highlight(tuc-accident) {
+  background-color: rgba(239, 68, 68, 0.32);
+  text-decoration: underline wavy #dc2626;
+}
+::highlight(tuc-accident-warn) {
+  background-color: rgba(245, 158, 11, 0.32);
+}
+::highlight(tuc-focus) {
+  background-color: rgba(79, 91, 255, 0.55);
+  color: #ffffff;
+}
+
+/* ---------- 枠線 ---------- */
+#tuc-overlay-root {
+  all: initial !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: visible !important;
+  z-index: 2147483646 !important;
+  pointer-events: none !important;
+}
+#tuc-overlay-root .tuc-layer {
+  all: initial;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#tuc-overlay-root .tuc-box {
+  all: initial;
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #dc2626;
+  border-radius: 4px;
+  background: rgba(220, 38, 38, 0.06);
+  pointer-events: none;
+}
+#tuc-overlay-root .tuc-box.tuc-sev-warn {
+  border-color: #d97706;
+  border-style: dashed;
+  background: rgba(217, 119, 6, 0.06);
+}
+#tuc-overlay-root .tuc-box.tuc-sev-info {
+  border-color: #2563eb;
+  border-style: dotted;
+  background: transparent;
+}
+#tuc-overlay-root .tuc-box-label {
+  all: initial;
+  position: absolute;
+  left: -2px;
+  top: -20px;
+  padding: 3px 6px;
+  border-radius: 4px 4px 4px 0;
+  background: #dc2626;
+  color: #ffffff;
+  font: 600 11px/1.2 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+#tuc-overlay-root .tuc-sev-warn > .tuc-box-label {
+  background: #d97706;
+}
+#tuc-overlay-root .tuc-sev-info > .tuc-box-label {
+  background: #2563eb;
+}
+#tuc-overlay-root .tuc-box-label.tuc-inside {
+  top: 2px;
+  left: 2px;
+  border-radius: 3px;
+}
+#tuc-overlay-root .tuc-focus-box {
+  all: initial;
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid #4f5bff;
+  border-radius: 6px;
+  box-shadow: 0 0 0 4px rgba(79, 91, 255, 0.28);
+  pointer-events: none;
+  animation: tuc-pulse 0.9s ease-out 3;
+}
+@keyframes tuc-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 91, 255, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(79, 91, 255, 0);
+  }
+}
+
+/* ---------- 本番ドメインでの通知 ---------- */
+#tuc-toast {
+  all: initial !important;
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+  max-width: min(360px, calc(100vw - 32px)) !important;
+  padding: 12px 12px 12px 14px !important;
+  border-radius: 12px !important;
+  border-left: 4px solid #dc2626 !important;
+  background: #ffffff !important;
+  color: #1a1d29 !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22), 0 2px 6px rgba(15, 23, 42, 0.12) !important;
+  font: 13px/1.5 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif !important;
+  opacity: 0 !important;
+  transform: translateY(8px) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+#tuc-toast.tuc-show {
+  opacity: 1 !important;
+  transform: none !important;
+}
+#tuc-toast .tuc-toast-icon {
+  all: initial;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  font: 700 13px/1 system-ui, sans-serif;
+}
+#tuc-toast .tuc-toast-body {
+  all: initial;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+#tuc-toast .tuc-toast-title {
+  all: initial;
+  color: #1a1d29;
+  font: 700 13px/1.4 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+}
+#tuc-toast .tuc-toast-msg {
+  all: initial;
+  color: #555b70;
+  font: 12px/1.5 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+}
+#tuc-toast .tuc-toast-close {
+  all: initial;
+  flex: none;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: #6b7185;
+  font: 16px/22px system-ui, sans-serif;
+  text-align: center;
+}
+#tuc-toast .tuc-toast-close:hover {
+  background: #f0f2f8;
+}

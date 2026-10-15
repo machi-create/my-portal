@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>テストアップチェッカー</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span class="brand-name">テストアップチェッカー</span>
+      </div>
+      <div class="target">
+        <span class="env-badge" id="envBadge" data-env="unknown">未登録</span>
+        <span class="target-url" id="targetUrl" title="">—</span>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="機能">
+        <button class="tab" role="tab" id="tab-ms" aria-controls="panel-ms" aria-selected="true">原稿照合</button>
+        <button class="tab" role="tab" id="tab-acc" aria-controls="panel-acc" aria-selected="false">
+          公開前チェック<span class="tab-count" id="accCount" hidden></span>
+        </button>
+        <button class="tab" role="tab" id="tab-set" aria-controls="panel-set" aria-selected="false">設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <div class="unavailable" id="unavailable" hidden>
+        <p class="unavailable-title">このページでは使用できません</p>
+        <p class="unavailable-msg" id="unavailableMsg"></p>
+      </div>
+
+      <!-- ============================== 原稿照合 ============================== -->
+      <section class="panel" id="panel-ms" role="tabpanel" aria-labelledby="tab-ms">
+        <div class="card">
+          <div class="card-head">
+            <h2>原稿</h2>
+            <div class="seg" role="radiogroup" aria-label="原稿の入力方法">
+              <button class="seg-btn" role="radio" aria-checked="true" data-src="paste">貼り付け</button>
+              <button class="seg-btn" role="radio" aria-checked="false" data-src="url">URL</button>
+              <button class="seg-btn" role="radio" aria-checked="false" data-src="file">ファイル</button>
+            </div>
+          </div>
+
+          <div class="src-pane" data-pane="url" hidden>
+            <div class="input-row">
+              <input type="url" id="msUrl" placeholder="スプレッドシート・ドキュメントのURL" spellcheck="false" />
+              <button class="btn" id="msUrlLoad">読み込む</button>
+            </div>
+            <p class="hint">Googleスプレッドシート・Googleドキュメント・CSV/テキストのURLに対応。共有設定が「リンクを知っている全員」か、Chromeでログイン中のアカウントで閲覧できるファイルを読み込めます。</p>
+          </div>
+
+          <div class="src-pane" data-pane="file" hidden>
+            <label class="dropzone" id="dropzone">
+              <input type="file" id="msFile" accept=".txt,.csv,.tsv,.md,.text" />
+              <span class="dropzone-main">ファイルを選択 またはドロップ</span>
+              <span class="dropzone-sub">.csv / .tsv / .txt / .md（ExcelのShift_JIS CSVも可）</span>
+            </label>
+          </div>
+
+          <textarea
+            id="msText"
+            rows="8"
+            spellcheck="false"
+            placeholder="ここに原稿を貼り付け&#10;&#10;・1行（表なら1セル）＝1つの要素として照合します&#10;・Excelやスプレッドシートのセルをそのままコピペできます&#10;・【見出し】などのラベルや行頭の■は自動で外します"
+          ></textarea>
+          <div class="ms-meta">
+            <span id="msStat" class="muted">0件</span>
+            <span id="msSaved" class="muted"></span>
+            <button class="link-btn" id="msClearText" type="button">クリア</button>
+          </div>
+
+          <details class="options" id="msOptions">
+            <summary>照合オプション</summary>
+            <div class="option-grid">
+              <label class="field">
+                <span>照合する列<small>（表のとき）</small></span>
+                <input type="text" id="optColumns" placeholder="例：C　/　C,D　空欄＝すべて" />
+              </label>
+              <label class="check"><input type="checkbox" id="optSkipHeader" /> 1行目は見出し行として除外</label>
+              <label class="field">
+                <span>照合する範囲</span>
+                <input type="text" id="optScope" placeholder="例：main　空欄＝ページ全体" spellcheck="false" />
+              </label>
+              <label class="field">
+                <span>無視する行の先頭</span>
+                <input type="text" id="optIgnore" placeholder="//, ※指示" />
+              </label>
+              <label class="check"><input type="checkbox" id="optStrip" checked /> 行頭のラベル・記号（【見出し】■・など）を外す</label>
+              <label class="check"><input type="checkbox" id="optExcludeHidden" /> 非表示の要素（閉じたアコーディオン等）は対象外</label>
+              <label class="check"><input type="checkbox" id="optExtras" checked /> 原稿にない文言も探す</label>
+              <label class="check sub"><input type="checkbox" id="optExcludeChrome" checked /> ヘッダー・ナビ・フッターは除く</label>
+              <label class="check"><input type="checkbox" id="optAutoRerun" checked /> ページを再読み込みしたら自動で再実行</label>
+            </div>
+          </details>
+
+          <div class="actions">
+            <button class="btn primary" id="runMs">照合する</button>
+            <button class="btn ghost" id="clearMs">結果をクリア</button>
+          </div>
+        </div>
+
+        <div class="card result" id="msResult" hidden>
+          <div class="score">
+            <div class="score-ring" id="msRing"><span id="msRate">0%</span></div>
+            <div class="score-text">
+              <strong>原稿の反映率</strong>
+              <span id="msRateDesc" class="muted"></span>
+            </div>
+          </div>
+          <div class="chips" id="msChips" role="toolbar" aria-label="表示する結果"></div>
+          <div class="legend" aria-hidden="true">
+            <span><i class="sw ok"></i>一致</span>
+            <span><i class="sw variant"></i>表記ゆれ</span>
+            <span><i class="sw diff"></i>文言差分</span>
+            <span><i class="sw extra"></i>原稿にない</span>
+          </div>
+          <div class="view-toggles">
+            <label class="check"><input type="checkbox" id="hlShow" checked /> ページに色付け</label>
+            <label class="check"><input type="checkbox" id="hlOk" checked /> 一致も色付け</label>
+          </div>
+          <ul class="items" id="msItems"></ul>
+          <div class="result-foot">
+            <button class="btn ghost small" id="copyMs">結果をコピー</button>
+            <span class="muted small" id="msElapsed"></span>
+          </div>
+        </div>
+
+        <div class="empty" id="msEmpty">
+          <p class="empty-title">原稿とページを突き合わせます</p>
+          <ol class="steps">
+            <li>テストアップしたページを開く</li>
+            <li>原稿を貼り付ける（またはURL・ファイルで読み込む）</li>
+            <li>「照合する」を押す → 違う箇所がページ上で色付けされます</li>
+          </ol>
+          <dl class="glossary">
+            <div><dt><span class="pill variant">表記ゆれ</span></dt><dd>全角/半角・大文字/小文字・記号だけが違う</dd></div>
+            <div><dt><span class="pill diff">文言差分</span></dt><dd>似ているが文言が違う（赤＝原稿のみ、緑＝ページのみ）</dd></div>
+            <div><dt><span class="pill missing">未反映</span></dt><dd>ページに見当たらない</dd></div>
+            <div><dt><span class="pill extra">原稿にない</span></dt><dd>ページにだけある文言</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- ============================== 公開前チェック ============================== -->
+      <section class="panel" id="panel-acc" role="tabpanel" aria-labelledby="tab-acc" hidden>
+        <div class="card">
+          <div class="env-row">
+            <span class="muted">判定：</span>
+            <span class="env-badge" id="envBadge2" data-env="unknown">未登録</span>
+          </div>
+          <p class="quick-reg" id="quickReg" hidden>
+            このドメインを
+            <button class="link-btn" type="button" data-reg="productionHosts">本番</button>
+            /
+            <button class="link-btn" type="button" data-reg="stagingHosts">テスト環境</button>
+            として登録
+          </p>
+          <p class="hint" id="envHint"></p>
+          <div class="actions">
+            <button class="btn primary" id="runAcc">チェックする</button>
+            <label class="check"><input type="checkbox" id="accShow" checked /> ページに表示</label>
+          </div>
+        </div>
+
+        <div id="accResult" hidden>
+          <div class="tiles" id="accTiles"></div>
+          <div id="accGroups"></div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>リンク切れ</h2>
+            </div>
+            <p class="hint">ページ内のリンク先に実際にアクセスして、404などを確認します（最大150件・ページ内のリンクから順に）。</p>
+            <div class="actions">
+              <button class="btn" id="runLinks">リンク切れをチェック</button>
+            </div>
+            <div class="progress" id="linkProgress" hidden><div class="progress-bar" id="linkBar"></div></div>
+            <div id="linkResult"></div>
+          </div>
+
+          <div class="result-foot">
+            <button class="btn ghost small" id="copyAcc">結果をコピー</button>
+            <span class="muted small" id="accElapsed"></span>
+          </div>
+        </div>
+
+        <div class="empty" id="accEmpty">
+          <p class="empty-title">公開前の「消し忘れ」を探します</p>
+          <ul class="bullets">
+            <li>noindex・title・description・OGP・canonical</li>
+            <li>「テキストテキスト」「○○」「XXX」などのダミー文言</li>
+            <li>仮画像・alt なし・表示されない画像</li>
+            <li>テスト環境やローカルのURL、example.com、href="#"</li>
+            <li>電話番号・メールのリンク、計測タグ、©の年、No.1表記</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================== 設定 ============================== -->
+      <section class="panel" id="panel-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+        <div class="card">
+          <h2>環境の判定</h2>
+          <label class="field">
+            <span>本番ドメイン</span>
+            <textarea id="setProd" rows="3" spellcheck="false" placeholder="example.co.jp&#10;*.example.com"></textarea>
+            <small>1行に1つ。「*.example.com」でサブドメインもまとめて指定できます。</small>
+          </label>
+          <label class="field">
+            <span>テスト環境ドメイン</span>
+            <textarea id="setStg" rows="3" spellcheck="false" placeholder="stg.example.co.jp&#10;localhost:3000"></textarea>
+            <small>未登録でも「stg.」「dev.」「test.」「localhost」などは自動でテスト環境と判定します。</small>
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>自動チェック</h2>
+          <p class="hint">ページを開いたときに公開前チェックを実行し、アイコンにエラー件数を表示します。</p>
+          <div class="radio-group" role="radiogroup">
+            <label class="check"><input type="radio" name="autoCheck" value="registered" /> 登録したドメインだけ（おすすめ）</label>
+            <label class="check"><input type="radio" name="autoCheck" value="all" /> すべてのサイト</label>
+            <label class="check"><input type="radio" name="autoCheck" value="off" /> オフ</label>
+          </div>
+          <label class="check"><input type="checkbox" id="setToast" /> 本番ドメインでエラーがあるとき、ページ内に通知を出す</label>
+        </div>
+
+        <div class="card">
+          <h2>原稿照合</h2>
+          <label class="field">
+            <span>「文言差分」とみなす似ている度合い <output id="thrOut">60%</output></span>
+            <input type="range" id="setThr" min="40" max="90" step="5" />
+            <small>低くすると、大きく違う文言も「文言差分」として拾います。高くすると「未反映」になりやすくなります。</small>
+          </label>
+        </div>
+
+        <p class="about">
+          v0.1.0 ・ 照合とチェックはすべてブラウザ内で処理します。原稿やページの内容を外部サービスへ送ることはありません。
+          <span class="saved" id="setSaved" aria-live="polite"></span>
+        </p>
+      </section>
+    </main>
+
+    <div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
+
+    <script src="../lib/normalize.js"></script>
+    <script src="../lib/diff.js"></script>
+    <script src="../lib/manuscript.js"></script>
+    <script src="../lib/settings.js"></script>
+    <script src="../lib/bridge.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
