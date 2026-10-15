@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>工数オートログ</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="../icons/icon32.png" alt="" width="20" height="20" />
+        <span>工数オートログ</span>
+        <span class="spacer"></span>
+        <button class="btn small" id="pauseBtn" type="button" aria-pressed="false">一時停止</button>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="表示">
+        <button class="tab" role="tab" id="tab-day" aria-controls="panel-day" aria-selected="true">1日</button>
+        <button class="tab" role="tab" id="tab-period" aria-controls="panel-period" aria-selected="false">集計</button>
+        <button class="tab" role="tab" id="tab-report" aria-controls="panel-report" aria-selected="false">日報</button>
+        <button class="tab" role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false">設定</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- ============================== 1日 ============================== -->
+      <section class="panel" id="panel-day" role="tabpanel" aria-labelledby="tab-day">
+        <div class="status" id="status" hidden>
+          <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+          <div class="status-body">
+            <b id="statusTitle"></b>
+            <span class="status-sub" id="statusSub"></span>
+          </div>
+          <button class="btn small" id="statusAssignBtn" type="button" aria-expanded="false" hidden>振り分ける</button>
+        </div>
+        <div id="statusAssign" hidden></div>
+
+        <div class="onboard" id="onboard" hidden>
+          <p class="onboard-title">プロジェクトを登録すると、自動で振り分けます</p>
+          <p class="hint first">登録しなくても記録は始まっています。あとから「未分類」の一覧で、サイトごとに振り分けることもできます。</p>
+          <button class="btn small" id="goSettings" type="button">プロジェクトを登録する</button>
+        </div>
+
+        <div class="date-nav" id="dateNav">
+          <button class="icon-btn" id="prevDay" type="button" aria-label="前の日">‹</button>
+          <button class="date-label" id="dayLabel" type="button" aria-label="日付を選ぶ"></button>
+          <input class="date-input" type="date" id="dayPick" tabindex="-1" aria-hidden="true" />
+          <button class="icon-btn" id="nextDay" type="button" aria-label="次の日">›</button>
+          <span class="spacer"></span>
+          <button class="link-btn" id="todayBtn" type="button">今日へ</button>
+        </div>
+
+        <div class="tiles" id="dayTiles"></div>
+
+        <div class="card" id="projCard">
+          <div class="card-head">
+            <h2>プロジェクト別</h2>
+            <span class="muted small">クリックで内訳</span>
+          </div>
+          <ul class="proj-list" id="projList"></ul>
+        </div>
+
+        <div class="card" id="flowCard">
+          <div class="card-head">
+            <h2>1日の流れ</h2>
+            <button class="link-btn" id="addManualBtn" type="button" aria-expanded="false">＋ 手入力</button>
+          </div>
+          <form class="manual" id="manualForm" hidden>
+            <div class="field-row">
+              <label class="field"><span>開始</span><input type="time" id="mStart" required /></label>
+              <label class="field"><span>終了</span><input type="time" id="mEnd" required /></label>
+            </div>
+            <label class="field"><span>プロジェクト</span><select id="mProject" required></select></label>
+            <label class="field"><span>内容 <small>任意</small></span><input type="text" id="mMemo" maxlength="100" placeholder="例：A社 定例MTG（オンライン）" /></label>
+            <div class="actions">
+              <button class="btn primary" type="submit">追加</button>
+              <button class="btn ghost" type="button" id="mCancel">やめる</button>
+            </div>
+            <p class="hint">会議・電話・外出など、ブラウザの外の作業に。手入力した時間は、同じ時間帯の自動記録より優先されます。</p>
+          </form>
+          <div class="timeline" id="timeline"></div>
+          <p class="hint" id="timelineHint">帯をクリックすると、その時間の記録を一覧で開きます。</p>
+          <button class="link-btn" id="toggleBlocks" type="button" aria-expanded="false" aria-controls="blocks"></button>
+          <ul class="blocks" id="blocks" hidden></ul>
+        </div>
+
+        <div class="card" id="unCard">
+          <div class="card-head">
+            <h2>未分類</h2>
+            <span class="muted small" id="unTotal"></span>
+          </div>
+          <p class="hint first">振り分けると、ほかの日の記録にもさかのぼって反映されます。</p>
+          <ul class="un-list" id="unList"></ul>
+        </div>
+
+        <div class="empty" id="dayEmpty">
+          <p class="empty-title" id="dayEmptyTitle">この日の記録はありません</p>
+          <ul id="dayEmptyList">
+            <li>Webページを見ている時間を、自動で記録します（サイドパネルを閉じていても記録します）</li>
+            <li>操作のない時間・Chromeを使っていない時間は数えません</li>
+            <li>記録はこのパソコンのChromeの中だけに保存され、外部には送りません</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================== 集計 ============================== -->
+      <section class="panel" id="panel-period" role="tabpanel" aria-labelledby="tab-period" hidden>
+        <div class="row wrap">
+          <div class="seg" role="radiogroup" aria-label="期間" id="periodSeg">
+            <button class="seg-btn" type="button" role="radio" data-period="thisWeek" aria-checked="true">今週</button>
+            <button class="seg-btn" type="button" role="radio" data-period="lastWeek" aria-checked="false">先週</button>
+            <button class="seg-btn" type="button" role="radio" data-period="thisMonth" aria-checked="false">今月</button>
+            <button class="seg-btn" type="button" role="radio" data-period="lastMonth" aria-checked="false">先月</button>
+          </div>
+          <span class="muted small" id="periodLabel"></span>
+        </div>
+
+        <div class="tiles" id="periodTiles"></div>
+
+        <div class="card" id="periodChartCard">
+          <div class="card-head">
+            <h2>日ごとの工数</h2>
+            <button class="link-btn" id="periodTableBtn" type="button" aria-pressed="false">表で見る</button>
+          </div>
+          <div class="legend" id="periodLegend"></div>
+          <div class="chart" id="periodChart"></div>
+          <div class="table-wrap" id="periodTable" hidden></div>
+        </div>
+
+        <div class="card" id="periodListCard">
+          <h2>プロジェクト別の合計</h2>
+          <ul class="proj-list" id="periodList"></ul>
+        </div>
+
+        <div class="card">
+          <h2>CSVで書き出す</h2>
+          <p class="hint first">工数管理表や請求の確認に。Excelで開けます（文字化けしない形式）。</p>
+          <div class="actions">
+            <button class="btn" id="csvSummaryBtn" type="button">集計（日付×プロジェクト）</button>
+            <button class="btn" id="csvDetailBtn" type="button">明細（記録ごと）</button>
+          </div>
+        </div>
+
+        <div class="empty" id="periodEmpty" hidden>
+          <p class="empty-title">この期間の記録はありません</p>
+        </div>
+      </section>
+
+      <!-- ============================== 日報 ============================== -->
+      <section class="panel" id="panel-report" role="tabpanel" aria-labelledby="tab-report" hidden>
+        <div class="date-nav">
+          <button class="icon-btn" id="rPrevDay" type="button" aria-label="前の日">‹</button>
+          <span class="date-label static" id="rDayLabel"></span>
+          <button class="icon-btn" id="rNextDay" type="button" aria-label="次の日">›</button>
+        </div>
+
+        <div class="card">
+          <h2>書き方</h2>
+          <div class="opt-grid">
+            <span class="opt-label">時間</span>
+            <div class="seg" role="radiogroup" aria-label="時間の表し方" id="modeSeg">
+              <button class="seg-btn" type="button" role="radio" data-mode="hm" aria-checked="true">1:30</button>
+              <button class="seg-btn" type="button" role="radio" data-mode="h" aria-checked="false">1.50h</button>
+            </div>
+            <label class="opt-label" for="unitSel">丸め</label>
+            <select id="unitSel">
+              <option value="0">しない（1分単位）</option>
+              <option value="5">5分単位</option>
+              <option value="15">15分単位</option>
+              <option value="30">30分単位</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" id="optDetails" /> よく見たページ（上位3件）を入れる</label>
+          <label class="check"><input type="checkbox" id="optUnassigned" /> 未分類の時間も入れる</label>
+        </div>
+
+        <div class="card" id="memoCard">
+          <h2>作業内容のメモ</h2>
+          <p class="hint first">日報に入れる作業内容を書きます。自動で保存されます。</p>
+          <ul class="memo-list" id="memoList"></ul>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>日報</h2>
+            <button class="btn small" id="copyReport" type="button">コピー</button>
+          </div>
+          <pre class="code" id="reportText"></pre>
+        </div>
+      </section>
+
+      <!-- ============================== 設定 ============================== -->
+      <section class="panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h2>プロジェクト</h2>
+            <button class="btn small" id="addProject" type="button">＋ 追加</button>
+          </div>
+          <details class="rule-help">
+            <summary>ルールの書き方</summary>
+            <table class="rule-table">
+              <tr><td class="mono">a-sha.co.jp</td><td>このドメインのページ（サブドメインも含む）</td></tr>
+              <tr><td class="mono">test.example.net/a-sha/</td><td>このURLで始まるページ</td></tr>
+              <tr><td class="mono">figma.com/*/AbC123</td><td>* は「何でもよい」</td></tr>
+              <tr><td class="mono">localhost:3000</td><td>開発中の環境（ポート番号つき）</td></tr>
+              <tr><td class="mono">title:A社</td><td>ページタイトルに「A社」を含む（Gmail・Googleドキュメントなどに便利）</td></tr>
+              <tr><td class="mono"># メモ</td><td># から後ろは無視されます</td></tr>
+            </table>
+            <p class="hint">1行に1つ書きます。複数に当てはまるときは、タイトル → URL → ドメインの順に、細かいルールが優先されます。</p>
+          </details>
+          <ul class="proj-edit-list" id="projectEditor"></ul>
+          <p class="empty small" id="noProjects">まだありません。「＋ 追加」から登録するか、「1日」タブの未分類から振り分けてください。</p>
+        </div>
+
+        <div class="card">
+          <h2>記録しないサイト</h2>
+          <label class="field">
+            <span>1行に1つ <small>個人的な利用など。プロジェクトと同じ書き方です</small></span>
+            <textarea id="exclude" class="mono" rows="3" spellcheck="false" placeholder="youtube.com&#10;amazon.co.jp&#10;title:個人"></textarea>
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>記録のしかた</h2>
+          <label class="field">
+            <span>操作がないとき</span>
+            <select id="idleMin">
+              <option value="1">1分で休止</option>
+              <option value="3">3分で休止</option>
+              <option value="5">5分で休止</option>
+              <option value="10">10分で休止</option>
+              <option value="15">15分で休止</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="keepAudible" /> 音が出ているタブ（オンライン会議など）は、操作がなくても記録する</label>
+          <label class="check"><input type="checkbox" id="recordUnfocused" /> ほかのアプリを使っているときも、Chromeで最後に見ていたページを記録する</label>
+          <label class="check"><input type="checkbox" id="badge" /> ツールバーのアイコンに、いまの案件の今日の時間を表示する</label>
+        </div>
+
+        <div class="card">
+          <h2>データ</h2>
+          <label class="field">
+            <span>記録の保存期間</span>
+            <select id="retentionDays">
+              <option value="30">30日</option>
+              <option value="90">90日</option>
+              <option value="180">180日</option>
+              <option value="365">1年</option>
+              <option value="0">ずっと</option>
+            </select>
+          </label>
+          <p class="hint first">プロジェクトと「記録しないサイト」の設定を、チームで共有できます。読み込むと、今の設定に追加されます。</p>
+          <div class="actions">
+            <button class="btn" id="exportSettings" type="button">設定を書き出す</button>
+            <button class="btn" id="importSettings" type="button">設定を読み込む</button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden />
+          </div>
+          <div class="divider"></div>
+          <button class="btn danger" id="clearAll" type="button">記録をすべて削除</button>
+        </div>
+
+        <p class="about">記録はこのパソコンのChromeの中（拡張機能の保存領域）にだけ保存されます。URLの「?」以降と「#」以降は記録しません。</p>
+      </section>
+    </main>
+
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+
+    <script src="../shared/ui.js"></script>
+    <script src="../lib/rules.js"></script>
+    <script src="../lib/log.js"></script>
+    <script src="../lib/track.js"></script>
+    <script src="../lib/report.js"></script>
+    <script src="../lib/palette.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

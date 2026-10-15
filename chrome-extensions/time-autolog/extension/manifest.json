@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "工数オートログ",
+  "short_name": "Time Autolog",
+  "version": "0.1.0",
+  "description": "見ているサイトから、案件ごとの作業時間を自動で記録。日報の文面とCSVをワンクリックで作成します（記録はこのパソコンの中だけに保存）",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "工数オートログを開く",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+  },
+  "side_panel": { "default_path": "sidepanel/sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["sidePanel", "storage", "unlimitedStorage", "tabs", "idle", "alarms"]
+}

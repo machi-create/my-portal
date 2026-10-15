@@ -49,6 +49,8 @@ export async function launch(opts) {
     channel: 'chromium',
     headless: true,
     viewport: { width: 1280, height: 900 },
+    // 文字コードの設定がない環境では、日本語のダウンロード名が「download」になるため UTF-8 にする
+    env: { ...process.env, LANG: process.env.LANG || 'C.UTF-8' },
     args: [`--disable-extensions-except=${opts.ext}`, `--load-extension=${opts.ext}`],
   });
   let [sw] = context.serviceWorkers();
@@ -97,6 +99,20 @@ export async function launch(opts) {
   }
 
   return { context, server, origin, extId, sw, openWithPanel, tabIdOf, close };
+}
+
+/**
+ * 非同期の条件（chrome.* API・storage など）が満たされるまで待つ。
+ * ※ Playwright の waitForFunction は、条件の関数が返す Promise を待たずに「真」とみなすため、こちらを使う
+ */
+export async function until(target, fn, arg, { timeout = 10000, interval = 100, message } = {}) {
+  const end = Date.now() + timeout;
+  for (;;) {
+    const v = await target.evaluate(fn, arg);
+    if (v) return v;
+    if (Date.now() > end) throw new Error(message || `条件を満たしませんでした（${timeout}ms）：${String(fn).slice(0, 140)}`);
+    await new Promise((r) => setTimeout(r, interval));
+  }
 }
 
 /** テストの手順を記録する。TUC_SHOTS / WDT_SHOTS にフォルダを指定するとスクリーンショットを保存 */

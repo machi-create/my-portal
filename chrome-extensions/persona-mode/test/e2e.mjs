@@ -2,7 +2,7 @@
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
-import { launch, runner } from '../../_test/harness.mjs';
+import { launch, runner, until } from '../../_test/harness.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const env = await launch({ ext: path.resolve(here, '../extension'), fixtures: path.resolve(here, 'fixtures') });
@@ -48,9 +48,9 @@ try {
 
   await step('ズーム125%で見る → 解除で元の倍率に戻る', async () => {
     await panel.check('#zoomOn');
-    await panel.waitForFunction(async (t) => (await chrome.tabs.getZoom(t)) > 1.2, tabId);
+    await until(panel, async (t) => (await chrome.tabs.getZoom(t)) > 1.2, tabId);
     await panel.uncheck('#zoomOn');
-    await panel.waitForFunction(async (t) => Math.abs((await chrome.tabs.getZoom(t)) - 1) < 0.01, tabId);
+    await until(panel, async (t) => Math.abs((await chrome.tabs.getZoom(t)) - 1) < 0.01, tabId);
   });
 
   await step('色覚D型：色の見え方を再現し、色だけのリンクを見つける', async () => {
@@ -97,7 +97,7 @@ try {
   await step('パネルを閉じても、見え方とズームが元に戻る', async () => {
     await pick('シニア');
     await panel.check('#zoomOn');
-    await panel.waitForFunction(async (t) => (await chrome.tabs.getZoom(t)) > 1.2, tabId);
+    await until(panel, async (t) => (await chrome.tabs.getZoom(t)) > 1.2, tabId);
     await panel.close();
     await page.waitForFunction(() => document.documentElement.style.getPropertyValue('filter') === '', null, { timeout: 5000 });
     const sw = env.sw;
